@@ -1,4 +1,4 @@
-name: Build OpenXilEnv (Windows + niXman MinGW + Qt 6.9 from source, no choco)
+name: Build OpenXilEnv (Windows, MinGW 14.2 + Qt 6.9, no choco)
 
 on:
   push:
@@ -11,88 +11,130 @@ jobs:
     runs-on: windows-latest
 
     env:
+      # Versions / sources
       MINGW_URL: https://github.com/niXman/mingw-builds-binaries/releases/download/14.2.0-rt_v12-rev1/x86_64-14.2.0-release-win32-seh-ucrt-rt_v12-rev1.7z
-      MINGW_ROOT: C:\app\tools\mingw64
-      QT_SRC: C:\Users\runneradmin\qtbase-6.9
-      QT_BUILD: C:\Users\runneradmin\BuildQt6.9
-      QT_PREFIX: C:\Qt\custom\6.9\mingw_64
+      MINGW_ROOT: C:\Users\runneradmin\mingw64
+
+      QTBASE_BRANCH: 6.9
+      QTTOOLS_BRANCH: 6.9
+      QTBASE_SRC:   C:\Users\runneradmin\qtbase-6.9
+      QTTOOLS_SRC:  C:\Users\runneradmin\qttools-6.9
+      QT_PREFIX:    C:\Users\runneradmin\Qt\6.9\mingw_64
+
+      # README optional deps
+      PUGIXML_VER: 1.11
+      FMI2_VER: 2.0.4
+      FMI3_VER: 3.0.1
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download & extract niXman MinGW 14.2
+      # MinGW 14.2 (niXman) — NO Chocolatey
+      - name: Download & extract MinGW 14.2 (niXman)
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path C:\app\tools | Out-Null
-          Invoke-WebRequest -Uri $env:MINGW_URL -OutFile C:\app\mingw.7z
-          & "C:\Program Files\7-Zip\7z.exe" x C:\app\mingw.7z -oC:\app\tools -y
-          $dir = Get-ChildItem C:\app\tools -Directory | Where-Object { $_.Name -like "x86_64-14.2.0-release-win32-seh-ucrt-rt_v12-rev1*" } | Select-Object -First 1
+          $zip = "$env:TEMP\mingw.7z"
+          Invoke-WebRequest -Uri $env:MINGW_URL -OutFile $zip
+          & "C:\Program Files\7-Zip\7z.exe" x $zip -o"$env:TEMP\mingw" -y
+          $dir = Get-ChildItem "$env:TEMP\mingw" -Directory | Where-Object { $_.Name -like "x86_64-14.2.0-release-win32-seh-ucrt-rt_v12-rev1*" } | Select-Object -First 1
           if (-not $dir) { throw "Extracted MinGW folder not found." }
-          Move-Item $dir.FullName $env:MINGW_ROOT -Force
+          if (Test-Path $env:MINGW_ROOT) { Remove-Item -Recurse -Force $env:MINGW_ROOT }
+          Move-Item $dir.FullName $env:MINGW_ROOT
+          # PATH
           "$env:MINGW_ROOT\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Install Strawberry Perl (official MSI)
+      - name: Verify toolchain basics
         shell: pwsh
-        run: |
-          $perlUrl = "https://strawberryperl.com/download/5.32.1.1/strawberry-perl-5.32.1.1-64bit.msi"
-          Invoke-WebRequest -Uri $perlUrl -OutFile perl.msi
-          Start-Process msiexec.exe -ArgumentList '/i', 'perl.msi', '/quiet', '/norestart' -Wait
-          # Add Perl to PATH
-          $perlBin = "C:\Strawberry\perl\bin"
-          echo $perlBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      - name: Verify toolchain
         run: |
           gcc --version
           g++ --version
           cmake --version
           ninja --version
+
+      # Strawberry Perl (official MSI) — NO Chocolatey
+      - name: Install Strawberry Perl (official MSI)
+        shell: pwsh
+        run: |
+          $perlUrl = "https://strawberryperl.com/download/5.32.1.1/strawberry-perl-5.32.1.1-64bit.msi"
+          Invoke-WebRequest -Uri $perlUrl -OutFile "$env:TEMP\perl.msi"
+          Start-Process msiexec.exe -ArgumentList '/i',"$env:TEMP\perl.msi",'/quiet','/norestart' -Wait
+          "C:\Strawberry\perl\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           perl --version
 
-      - name: Fetch Qt 6.9 (qtbase only)
+      # Qt 6.9 from source (qtbase + qttools) with our MinGW
+      - name: Fetch Qt 6.9 sources
+        shell: pwsh
         run: |
-          git clone --depth 1 --branch 6.9 https://github.com/qt/qtbase.git "%QT_SRC%"
-          mkdir "%QT_BUILD%"
-          mkdir "%QT_PREFIX%"
+          git clone --depth 1 --branch $env:QTBASE_BRANCH  https://github.com/qt/qtbase.git  "$env:QTBASE_SRC"
+          git clone --depth 1 --branch $env:QTTOOLS_BRANCH https://github.com/qt/qttools.git "$env:QTTOOLS_SRC"
+          New-Item -ItemType Directory -Force -Path "$env:QT_PREFIX" | Out-Null
 
       - name: Build & install Qt 6.9 (qtbase)
+        shell: pwsh
         run: |
-          cd "%QT_BUILD%"
-          cmake -G Ninja ^
-            -DCMAKE_BUILD_TYPE=Release ^
-            -DCMAKE_INSTALL_PREFIX="%QT_PREFIX%" ^
-            -DCMAKE_C_COMPILER="%MINGW_ROOT%\bin\gcc.exe" ^
-            -DCMAKE_CXX_COMPILER="%MINGW_ROOT%\bin\g++.exe" ^
-            -DQT_BUILD_TOOLS=ON ^
-            -DBUILD_SHARED_LIBS=ON ^
-            "%QT_SRC%"
+          $build = "$env:QTBASE_SRC-build"
+          New-Item -ItemType Directory -Force -Path $build | Out-Null
+          cd $build
+          cmake -G "Ninja" `
+            -S "$env:QTBASE_SRC" `
+            -B . `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_INSTALL_PREFIX="$env:QT_PREFIX" `
+            -DCMAKE_C_COMPILER="$env:MINGW_ROOT\bin\gcc.exe" `
+            -DCMAKE_CXX_COMPILER="$env:MINGW_ROOT\bin\g++.exe" `
+            -DBUILD_SHARED_LIBS=ON `
+            -DQT_BUILD_TOOLS=ON `
+            -DFEATURE_opengl=dynamic
           ninja
           ninja install
-          echo "%QT_PREFIX%\bin" >> %GITHUB_PATH%
+          echo "$env:QT_PREFIX\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Fetch pugixml 1.11 and FMI 2.0.4/3.0.1 sources
+      - name: Build & install Qt 6.9 (qttools)  # get windeployqt
+        shell: pwsh
         run: |
-          mkdir deps
-          curl -L -o deps\pugixml-1.11.tar.gz https://github.com/zeux/pugixml/releases/download/v1.11/pugixml-1.11.tar.gz
-          tar -xzf deps\pugixml-1.11.tar.gz -C deps
-          curl -L -o deps\FMI-Standard-2.0.4.zip https://github.com/modelica/fmi-standard/releases/download/v2.0.4/FMI-Standard-2.0.4.zip
-          curl -L -o deps\FMI-Standard-3.0.1.zip https://github.com/modelica/fmi-standard/releases/download/v3.0.1/FMI-Standard-3.0.1.zip
-          tar -xf deps\FMI-Standard-2.0.4.zip -C deps
-          tar -xf deps\FMI-Standard-3.0.1.zip -C deps
+          $build = "$env:QTTOOLS_SRC-build"
+          New-Item -ItemType Directory -Force -Path $build | Out-Null
+          cd $build
+          cmake -G "Ninja" `
+            -S "$env:QTTOOLS_SRC" `
+            -B . `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_INSTALL_PREFIX="$env:QT_PREFIX" `
+            -DCMAKE_PREFIX_PATH="$env:QT_PREFIX" `
+            -DCMAKE_C_COMPILER="$env:MINGW_ROOT\bin\gcc.exe" `
+            -DCMAKE_CXX_COMPILER="$env:MINGW_ROOT\bin\g++.exe"
+          ninja
+          ninja install
+          if (!(Test-Path "$env:QT_PREFIX\bin\windeployqt.exe")) { throw "windeployqt.exe not found after qttools install." }
 
+      # README optional deps (pugixml 1.11, FMI 2.0.4/3.0.1)
+      - name: Fetch pugixml 1.11 & FMI 2.0.4/3.0.1
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path deps | Out-Null
+          Invoke-WebRequest -Uri "https://github.com/zeux/pugixml/releases/download/v$env:PUGIXML_VER/pugixml-$env:PUGIXML_VER.tar.gz" -OutFile deps\pugixml.tgz
+          tar -xzf deps\pugixml.tgz -C deps
+          Invoke-WebRequest -Uri "https://github.com/modelica/fmi-standard/releases/download/v$env:FMI2_VER/FMI-Standard-$env:FMI2_VER.zip" -OutFile deps\fmi2.zip
+          Invoke-WebRequest -Uri "https://github.com/modelica/fmi-standard/releases/download/v$env:FMI3_VER/FMI-Standard-$env:FMI3_VER.zip" -OutFile deps\fmi3.zip
+          tar -xf deps\fmi2.zip -C deps
+          tar -xf deps\fmi3.zip -C deps
+
+      # Build OpenXilEnv with our toolchain & Qt
       - name: Configure OpenXilEnv
+        shell: pwsh
         run: |
-          mkdir build
+          New-Item -ItemType Directory -Force -Path build | Out-Null
           cd build
-          cmake -G Ninja .. ^
-            -DCMAKE_BUILD_TYPE=Release ^
-            -DCMAKE_INSTALL_PREFIX=../install_win ^
-            -DPUGIXML_SOURCE_PATH=%GITHUB_WORKSPACE%\deps\pugixml-1.11 ^
-            -DFMI2_SOURCE_PATH=%GITHUB_WORKSPACE%\deps\FMI-Standard-2.0.4 ^
-            -DFMI3_SOURCE_PATH=%GITHUB_WORKSPACE%\deps\FMI-Standard-3.0.1 ^
-            -DCMAKE_C_COMPILER=%MINGW_ROOT%\bin\gcc.exe ^
-            -DCMAKE_CXX_COMPILER=%MINGW_ROOT%\bin\g++.exe
+          cmake -G "Ninja" .. `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_INSTALL_PREFIX=../install_win `
+            -DCMAKE_PREFIX_PATH="$env:QT_PREFIX" `
+            -DCMAKE_C_COMPILER="$env:MINGW_ROOT\bin\gcc.exe" `
+            -DCMAKE_CXX_COMPILER="$env:MINGW_ROOT\bin\g++.exe" `
+            -DPUGIXML_SOURCE_PATH="${{ github.workspace }}\deps\pugixml-$env:PUGIXML_VER" `
+            -DFMI2_SOURCE_PATH="${{ github.workspace }}\deps\FMI-Standard-$env:FMI2_VER" `
+            -DFMI3_SOURCE_PATH="${{ github.workspace }}\deps\FMI-Standard-$env:FMI3_VER"
 
       - name: Build OpenXilEnv
         run: |
@@ -104,13 +146,11 @@ jobs:
           cd build
           ninja install
 
-      - name: Package Qt runtime with app
+      - name: Deploy Qt DLLs with windeployqt
+        shell: pwsh
         run: |
-          mkdir install_win\qt_runtime
-          robocopy "%QT_PREFIX%\bin" install_win\qt_runtime\bin /E /NFL /NDL /NJH /NJS /NC /NS
-          robocopy "%QT_PREFIX%\plugins" install_win\qt_runtime\plugins /E /NFL /NDL /NJH /NJS /NC /NS
-          robocopy "%QT_PREFIX%\translations" install_win\qt_runtime\translations /E /NFL /NDL /NJH /NJS /NC /NS
-          robocopy "%MINGW_ROOT%\bin" install_win\qt_runtime\mingw_bin /E /NFL /NDL /NJH /NJS /NC /NS
+          cd install_win
+          & "$env:QT_PREFIX\bin\windeployqt.exe" XilEnvGui.exe
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
