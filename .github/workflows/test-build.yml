@@ -92,9 +92,23 @@ jobs:
       - name: Build & install Qt 6.9 (qtbase)
         shell: pwsh
         run: |
+          # Make niXman MinGW FIRST in PATH for this step
+          $env:Path = "$env:MINGW_ROOT\bin;$env:Path"
+      
           $build = "$env:QTBASE_SRC-build"
           New-Item -ItemType Directory -Force -Path $build | Out-Null
           cd $build
+
+          # Sanitize PATH: drop msys/git mingw entries except ours
+          $parts = $env:Path -split ';'
+          $clean = $parts | Where-Object {
+            $_ -and
+            ($_ -notmatch 'msys' ) -and
+            ($_ -notmatch '\\Git\\usr\\bin') -and
+            ($_ -notmatch '\\mingw' -or $_ -like "$env:MINGW_ROOT\bin")
+          }
+          $env:Path = "$env:MINGW_ROOT\bin;" + ($clean -join ';')
+
           cmake -G "Ninja" `
             -S "$env:QTBASE_SRC" `
             -B . `
@@ -102,18 +116,31 @@ jobs:
             -DCMAKE_INSTALL_PREFIX="$env:QT_PREFIX" `
             -DCMAKE_C_COMPILER="$env:MINGW_ROOT\bin\gcc.exe" `
             -DCMAKE_CXX_COMPILER="$env:MINGW_ROOT\bin\g++.exe" `
-            -DBUILD_SHARED_LIBS=ON `
-            -DQT_BUILD_TOOLS=ON 
+            -DBUILD_SHARED_LIBS=ON
           ninja
           ninja install
           echo "$env:QT_PREFIX\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      - name: Build & install Qt 6.9 (qttools)  # get windeployqt
+      
+      - name: Build & install Qt 6.9 (qttools)  # for windeployqt
         shell: pwsh
         run: |
+          # Ensure the same MinGW is FIRST in PATH here, too
+          $env:Path = "$env:MINGW_ROOT\bin;$env:Path"
+      
           $build = "$env:QTTOOLS_SRC-build"
           New-Item -ItemType Directory -Force -Path $build | Out-Null
           cd $build
+
+          # Sanitize PATH: drop msys/git mingw entries except ours
+          $parts = $env:Path -split ';'
+          $clean = $parts | Where-Object {
+            $_ -and
+            ($_ -notmatch 'msys' ) -and
+            ($_ -notmatch '\\Git\\usr\\bin') -and
+            ($_ -notmatch '\\mingw' -or $_ -like "$env:MINGW_ROOT\bin")
+          }
+          $env:Path = "$env:MINGW_ROOT\bin;" + ($clean -join ';')
+          
           cmake -G "Ninja" `
             -S "$env:QTTOOLS_SRC" `
             -B . `
@@ -125,6 +152,7 @@ jobs:
           ninja
           ninja install
           if (!(Test-Path "$env:QT_PREFIX\bin\windeployqt.exe")) { throw "windeployqt.exe not found after qttools install." }
+
 
       # README optional deps (pugixml 1.11, FMI 2.0.4/3.0.1)
       - name: Fetch pugixml 1.11 & FMI 2.0.4/3.0.1
