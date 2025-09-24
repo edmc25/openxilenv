@@ -1,8 +1,8 @@
-name: Build OpenXilEnv (Windows via MSYS2)
+name: Build OpenXilEnv (Windows, pinned deps)
 
 on:
   push:
-    branches: [ test-build ]   # only runs on test-build branch
+    branches: [ test-build ]     # run only on side branch
   pull_request:
     branches: [ test-build ]
 
@@ -10,54 +10,83 @@ jobs:
   build:
     runs-on: windows-latest
 
+    env:
+      QT_VERSION: 6.7.2
+      MINGW_TOOL: tools_mingw1120   # MinGW 11.2
+      QT_ROOT: C:\Qt
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install MSYS2 and dependencies
-        uses: msys2/setup-msys2@v2
+      - name: Ensure Python & pip
+        uses: actions/setup-python@v5
         with:
-          msystem: MINGW64
-          update: true
-          install: >-
-            mingw-w64-x86_64-gcc
-            mingw-w64-x86_64-cmake
-            mingw-w64-x86_64-make
-            mingw-w64-x86_64-qt6-base
-            mingw-w64-x86_64-qt6-tools
-            mingw-w64-x86_64-pugixml
-            perl
+          python-version: "3.x"
 
-      - name: Configure with CMake
-        shell: msys2 {0}
+      - name: Install aqtinstall
+        run: pip install aqtinstall
+
+      # Install Qt 6.7.2 for win64_mingw + Qt Tools (windeployqt)
+      - name: Install Qt
         run: |
-          mkdir build
+          aqt install-qt windows desktop %QT_VERSION% win64_mingw -O %QT_ROOT% -m qttools
+          aqt install-tool windows desktop %MINGW_TOOL% -O %QT_ROOT%\Tools
+
+      - name: Set up Qt/MinGW PATH
+        shell: pwsh
+        run: |
+          $qtBin    = "$env:QT_ROOT\$env:QT_VERSION\mingw_64\bin"
+          $mingwBin = "$env:QT_ROOT\Tools\mingw1120_64\bin"
+          echo "$qtBin"    | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "$mingwBin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "QT_BIN=$qtBin"         | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "MINGW_BIN=$mingwBin"   | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Install Strawberry Perl (required by README)
+        run: choco install -y strawberryperl
+
+      - name: Fetch pinned optional sources (pugixml 1.11, FMI 2.0.4/3.0.1)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path deps | Out-Null
+          curl -L -o deps\pugixml-1.11.tar.gz https://github.com/zeux/pugixml/releases/download/v1.11/pugixml-1.11.tar.gz
+          tar -xzf deps\pugixml-1.11.tar.gz -C deps
+          curl -L -o deps\FMI-Standard-2.0.4.zip https://github.com/modelica/fmi-standard/releases/download/v2.0.4/FMI-Standard-2.0.4.zip
+          curl -L -o deps\FMI-Standard-3.0.1.zip https://github.com/modelica/fmi-standard/releases/download/v3.0.1/FMI-Standard-3.0.1.zip
+          tar -xf deps\FMI-Standard-2.0.4.zip -C deps
+          tar -xf deps\FMI-Standard-3.0.1.zip -C deps
+
+      - name: Configure with CMake (MinGW Makefiles)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path build | Out-Null
           cd build
-          cmake -G "MinGW Makefiles" .. \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DBUILD_EXAMPLES=ON \
-            -DCMAKE_INSTALL_PREFIX=../install_win
+          cmake -G "MinGW Makefiles" .. `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DBUILD_EXAMPLES=ON `
+            -DCMAKE_INSTALL_PREFIX=../install_win `
+            -DPUGIXML_SOURCE_PATH=${{ github.workspace }}\deps\pugixml-1.11 `
+            -DFMI2_SOURCE_PATH=${{ github.workspace }}\deps\FMI-Standard-2.0.4 `
+            -DFMI3_SOURCE_PATH=${{ github.workspace }}\deps\FMI-Standard-3.0.1
 
       - name: Build
-        shell: msys2 {0}
         run: |
           cd build
           cmake --build . --config Release
 
       - name: Install
-        shell: msys2 {0}
         run: |
           cd build
           cmake --install .
 
-      - name: Deploy Qt DLLs
-        shell: msys2 {0}
+      - name: Deploy Qt runtime (windeployqt)
         run: |
           cd install_win
-          windeployqt6 XilEnvGui.exe
+          windeployqt.exe XilEnvGui.exe
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: OpenXilEnv-Windows
+          name: OpenXilEnv-Windows-Qt${{ env.QT_VERSION }}-MinGW112
           path: install_win/**
