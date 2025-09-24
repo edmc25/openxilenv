@@ -103,8 +103,7 @@ jobs:
             -DCMAKE_C_COMPILER="$env:MINGW_ROOT\bin\gcc.exe" `
             -DCMAKE_CXX_COMPILER="$env:MINGW_ROOT\bin\g++.exe" `
             -DBUILD_SHARED_LIBS=ON `
-            -DQT_BUILD_TOOLS=ON `
-            -DFEATURE_opengl=dynamic
+            -DQT_BUILD_TOOLS=ON 
           ninja
           ninja install
           echo "$env:QT_PREFIX\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
