@@ -1,4 +1,4 @@
-name: Build OpenXilEnv (Windows, pinned deps via aqt)
+name: Build OpenXilEnv (Windows + niXman MinGW + Qt 6.9 from source, no choco)
 
 on:
   push:
@@ -11,136 +11,109 @@ jobs:
     runs-on: windows-latest
 
     env:
-      QT_VERSION: 6.7.2              # README range: 5.12.9 … 6.7.2
-      QT_ROOT: C:\Qt                 # aqt target directory
+      MINGW_URL: https://github.com/niXman/mingw-builds-binaries/releases/download/14.2.0-rt_v12-rev1/x86_64-14.2.0-release-win32-seh-ucrt-rt_v12-rev1.7z
+      MINGW_ROOT: C:\app\tools\mingw64
+      QT_SRC: C:\Users\runneradmin\qtbase-6.9
+      QT_BUILD: C:\Users\runneradmin\BuildQt6.9
+      QT_PREFIX: C:\Qt\custom\6.9\mingw_64
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Python for aqt
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Install aqtinstall
-        run: pip install aqtinstall
-
-      # Discover modules/tools so we don’t request non-existent ids
-      - name: Discover Qt modules & MinGW tool (via aqt)
+      - name: Download & extract niXman MinGW 14.2
         shell: pwsh
         run: |
-          # Check available modules for Qt $env:QT_VERSION win64_mingw
-          $mods = aqt list-qt windows desktop --modules $env:QT_VERSION win64_mingw 2>$null
-          if ($LASTEXITCODE -ne 0) { $mods = "" }
-          $hasQtTools = $mods -match '(^|[\s,])qttools($|[\s,])'
-          if ($hasQtTools) {
-            "AQT_QT_MODULES=qttools" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          } else {
-            "AQT_QT_MODULES=" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-            Write-Host "qttools not advertised for $env:QT_VERSION win64_mingw; will install Qt without it."
-          }
+          New-Item -ItemType Directory -Force -Path C:\app\tools | Out-Null
+          Invoke-WebRequest -Uri $env:MINGW_URL -OutFile C:\app\mingw.7z
+          & "C:\Program Files\7-Zip\7z.exe" x C:\app\mingw.7z -oC:\app\tools -y
+          $dir = Get-ChildItem C:\app\tools -Directory | Where-Object { $_.Name -like "x86_64-14.2.0-release-win32-seh-ucrt-rt_v12-rev1*" } | Select-Object -First 1
+          if (-not $dir) { throw "Extracted MinGW folder not found." }
+          Move-Item $dir.FullName $env:MINGW_ROOT -Force
+          "$env:MINGW_ROOT\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-          # Find MinGW 11.2 tool (mingw1120_64) published by mirror
-          $tools = aqt list-tool windows desktop 2>$null
-          if ($LASTEXITCODE -ne 0) { throw "Could not list aqt tools." }
-          $mingwLine = $tools | Select-String -Pattern 'tools_mingw.*mingw1120_64' | Select-Object -First 1
-          if (-not $mingwLine) { throw "No MinGW 11.2 (mingw1120_64) tool advertised by aqt mirror." }
-          $toolId = ($mingwLine.ToString() -split '\s+') | Where-Object { $_ -like 'tools_mingw*' } | Select-Object -First 1
-          if (-not $toolId) { throw "Could not parse tools_mingw id from: $mingwLine" }
-          "AQT_MINGW_TOOL=$toolId" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          Write-Host "Selected MinGW tool: $toolId"
-
-      - name: Install Qt ${{ env.QT_VERSION }} (win64_mingw) & MinGW 11.2
+      - name: Install Strawberry Perl (official MSI)
         shell: pwsh
         run: |
-          if ("$env:AQT_QT_MODULES") {
-            aqt install-qt windows desktop $env:QT_VERSION win64_mingw -O $env:QT_ROOT -m $env:AQT_QT_MODULES
-          } else {
-            aqt install-qt windows desktop $env:QT_VERSION win64_mingw -O $env:QT_ROOT
-          }
-          aqt install-tool windows desktop $env:AQT_MINGW_TOOL -O "$env:QT_ROOT\Tools"
+          $perlUrl = "https://strawberryperl.com/download/5.32.1.1/strawberry-perl-5.32.1.1-64bit.msi"
+          Invoke-WebRequest -Uri $perlUrl -OutFile perl.msi
+          Start-Process msiexec.exe -ArgumentList '/i', 'perl.msi', '/quiet', '/norestart' -Wait
+          # Add Perl to PATH
+          $perlBin = "C:\Strawberry\perl\bin"
+          echo $perlBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Set PATH for Qt/MinGW
-        shell: pwsh
+      - name: Verify toolchain
         run: |
-          $qtBin    = "$env:QT_ROOT\$env:QT_VERSION\mingw_64\bin"
-          $mingwBin = Get-ChildItem "$env:QT_ROOT\Tools" -Recurse -Directory -Filter "mingw1120_64" -ErrorAction SilentlyContinue |
-                      ForEach-Object { Join-Path $_.FullName "bin" } | Select-Object -First 1
-          if (-not $mingwBin) { throw "mingw1120_64\bin not found under $env:QT_ROOT\Tools" }
-          $qtCreatorBin = Get-ChildItem "$env:QT_ROOT\Tools" -Recurse -Directory -Filter "QtCreator" -ErrorAction SilentlyContinue |
-                          ForEach-Object { Join-Path $_.FullName "bin" } | Select-Object -First 1
+          gcc --version
+          g++ --version
+          cmake --version
+          ninja --version
+          perl --version
 
-          $qtBin, $mingwBin, $qtCreatorBin | Where-Object { $_ } | ForEach-Object {
-            echo $_ | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          }
+      - name: Fetch Qt 6.9 (qtbase only)
+        run: |
+          git clone --depth 1 --branch 6.9 https://github.com/qt/qtbase.git "%QT_SRC%"
+          mkdir "%QT_BUILD%"
+          mkdir "%QT_PREFIX%"
 
-          "QT_BIN=$qtBin"       | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "MINGW_BIN=$mingwBin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          if ($qtCreatorBin) { "QT_CREATOR_BIN=$qtCreatorBin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append }
+      - name: Build & install Qt 6.9 (qtbase)
+        run: |
+          cd "%QT_BUILD%"
+          cmake -G Ninja ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DCMAKE_INSTALL_PREFIX="%QT_PREFIX%" ^
+            -DCMAKE_C_COMPILER="%MINGW_ROOT%\bin\gcc.exe" ^
+            -DCMAKE_CXX_COMPILER="%MINGW_ROOT%\bin\g++.exe" ^
+            -DQT_BUILD_TOOLS=ON ^
+            -DBUILD_SHARED_LIBS=ON ^
+            "%QT_SRC%"
+          ninja
+          ninja install
+          echo "%QT_PREFIX%\bin" >> %GITHUB_PATH%
 
-      # Strawberry Perl (required by README on Windows)
-      - name: Install Strawberry Perl
-        run: choco install -y strawberryperl
-
-      # Optional deps pinned by README: pugixml 1.11 and FMI 2.0.4 / 3.0.1
       - name: Fetch pugixml 1.11 and FMI 2.0.4/3.0.1 sources
-        shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path deps | Out-Null
+          mkdir deps
           curl -L -o deps\pugixml-1.11.tar.gz https://github.com/zeux/pugixml/releases/download/v1.11/pugixml-1.11.tar.gz
           tar -xzf deps\pugixml-1.11.tar.gz -C deps
-
           curl -L -o deps\FMI-Standard-2.0.4.zip https://github.com/modelica/fmi-standard/releases/download/v2.0.4/FMI-Standard-2.0.4.zip
           curl -L -o deps\FMI-Standard-3.0.1.zip https://github.com/modelica/fmi-standard/releases/download/v3.0.1/FMI-Standard-3.0.1.zip
           tar -xf deps\FMI-Standard-2.0.4.zip -C deps
           tar -xf deps\FMI-Standard-3.0.1.zip -C deps
 
-      - name: Configure (CMake, MinGW Makefiles)
-        shell: pwsh
+      - name: Configure OpenXilEnv
         run: |
-          New-Item -ItemType Directory -Force -Path build | Out-Null
+          mkdir build
           cd build
-          cmake -G "MinGW Makefiles" .. `
-            -DCMAKE_BUILD_TYPE=Release `
-            -DBUILD_EXAMPLES=ON `
-            -DCMAKE_INSTALL_PREFIX=../install_win `
-            -DPUGIXML_SOURCE_PATH=${{ github.workspace }}\deps\pugixml-1.11 `
-            -DFMI2_SOURCE_PATH=${{ github.workspace }}\deps\FMI-Standard-2.0.4 `
-            -DFMI3_SOURCE_PATH=${{ github.workspace }}\deps\FMI-Standard-3.0.1
+          cmake -G Ninja .. ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DCMAKE_INSTALL_PREFIX=../install_win ^
+            -DPUGIXML_SOURCE_PATH=%GITHUB_WORKSPACE%\deps\pugixml-1.11 ^
+            -DFMI2_SOURCE_PATH=%GITHUB_WORKSPACE%\deps\FMI-Standard-2.0.4 ^
+            -DFMI3_SOURCE_PATH=%GITHUB_WORKSPACE%\deps\FMI-Standard-3.0.1 ^
+            -DCMAKE_C_COMPILER=%MINGW_ROOT%\bin\gcc.exe ^
+            -DCMAKE_CXX_COMPILER=%MINGW_ROOT%\bin\g++.exe
 
-      - name: Build
-        run: |
-          cd build
-          cmake --build . --config Release
-
-      - name: Install
+      - name: Build OpenXilEnv
         run: |
           cd build
-          cmake --install .
+          ninja
 
-      - name: Deploy Qt runtime (best-effort)
-        shell: pwsh
+      - name: Install OpenXilEnv
         run: |
-          $candidates = @(
-            "$env:QT_BIN\windeployqt.exe",
-            "$env:QT_BIN\windeployqt6.exe",
-            "$env:QT_CREATOR_BIN\windeployqt.exe",
-            "$env:QT_CREATOR_BIN\windeployqt6.exe"
-          ) | Where-Object { $_ -and (Test-Path $_) }
+          cd build
+          ninja install
 
-          if ($candidates.Count -gt 0) {
-            $wdq = $candidates[0]
-            Write-Host "Using windeployqt at: $wdq"
-            cd install_win
-            & "$wdq" XilEnvGui.exe
-          } else {
-            Write-Host "windeployqt not found; skipping deployment. Qt bin is on PATH, app should still run."
-          }
+      - name: Package Qt runtime with app
+        run: |
+          mkdir install_win\qt_runtime
+          robocopy "%QT_PREFIX%\bin" install_win\qt_runtime\bin /E /NFL /NDL /NJH /NJS /NC /NS
+          robocopy "%QT_PREFIX%\plugins" install_win\qt_runtime\plugins /E /NFL /NDL /NJH /NJS /NC /NS
+          robocopy "%QT_PREFIX%\translations" install_win\qt_runtime\translations /E /NFL /NDL /NJH /NJS /NC /NS
+          robocopy "%MINGW_ROOT%\bin" install_win\qt_runtime\mingw_bin /E /NFL /NDL /NJH /NJS /NC /NS
 
-      - name: Upload build artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: OpenXilEnv-Windows-Qt${{ env.QT_VERSION }}-MinGW112
+          name: OpenXilEnv-Windows-Qt6.9-MinGW14.2
           path: install_win/**
