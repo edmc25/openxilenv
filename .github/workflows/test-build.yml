@@ -27,11 +27,11 @@ jobs:
       - name: Install aqtinstall
         run: pip install aqtinstall
 
-      # Install Qt 6.7.2 for win64_mingw + Qt Tools (windeployqt)
       - name: Install Qt
+        shell: pwsh
         run: |
-          aqt install-qt windows desktop %QT_VERSION% win64_mingw -O %QT_ROOT% -m qttools
-          aqt install-tool windows desktop %MINGW_TOOL% -O %QT_ROOT%\Tools
+          aqt install-qt windows desktop $env:QT_VERSION win64_mingw -O $env:QT_ROOT -m qttools
+          aqt install-tool windows desktop $env:MINGW_TOOL -O "$env:QT_ROOT\Tools"
 
       - name: Set up Qt/MinGW PATH
         shell: pwsh
@@ -40,8 +40,9 @@ jobs:
           $mingwBin = "$env:QT_ROOT\Tools\mingw1120_64\bin"
           echo "$qtBin"    | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           echo "$mingwBin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          echo "QT_BIN=$qtBin"         | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "MINGW_BIN=$mingwBin"   | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "QT_BIN=$qtBin"       | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "MINGW_BIN=$mingwBin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
 
       - name: Install Strawberry Perl (required by README)
         run: choco install -y strawberryperl
