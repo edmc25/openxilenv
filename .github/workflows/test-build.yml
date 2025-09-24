@@ -30,18 +30,37 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # MinGW 14.2 (niXman) — NO Chocolatey
       - name: Download & extract MinGW 14.2 (niXman)
         shell: pwsh
         run: |
-          $zip = "$env:TEMP\mingw.7z"
+          $zip = "$env:GITHUB_WORKSPACE\mingw.7z"
+          $extractRoot = "$env:GITHUB_WORKSPACE\mingw-extract"
+      
+          New-Item -ItemType Directory -Force -Path $extractRoot | Out-Null
+      
+          # Download + extract
           Invoke-WebRequest -Uri $env:MINGW_URL -OutFile $zip
-          & "C:\Program Files\7-Zip\7z.exe" x $zip -o"$env:TEMP\mingw" -y
-          $dir = Get-ChildItem "$env:TEMP\mingw" -Directory | Where-Object { $_.Name -like "x86_64-14.2.0-release-win32-seh-ucrt-rt_v12-rev1*" } | Select-Object -First 1
-          if (-not $dir) { throw "Extracted MinGW folder not found." }
+          & "C:\Program Files\7-Zip\7z.exe" x $zip -o"$extractRoot" -y
+      
+          # Find the actual MinGW root by locating bin\gcc.exe
+          $gcc = Get-ChildItem -Path $extractRoot -Recurse -Filter gcc.exe -ErrorAction SilentlyContinue `
+                 | Where-Object { $_.FullName -match '\\bin\\gcc\.exe$' } `
+                 | Select-Object -First 1
+          if (-not $gcc) {
+            Write-Host "=== Extracted tree (top-level) ==="
+            Get-ChildItem -Path $extractRoot
+            throw "Could not find gcc.exe under the extracted MinGW archive."
+          }
+      
+          $mingwBin = Split-Path $gcc.FullName -Parent           # ...\mingw64\bin
+          $mingwRoot = Split-Path $mingwBin -Parent              # ...\mingw64
+      
+          # Move to the final location
           if (Test-Path $env:MINGW_ROOT) { Remove-Item -Recurse -Force $env:MINGW_ROOT }
-          Move-Item $dir.FullName $env:MINGW_ROOT
-          # PATH
+          New-Item -ItemType Directory -Force -Path (Split-Path $env:MINGW_ROOT) | Out-Null
+          Move-Item $mingwRoot $env:MINGW_ROOT
+      
+          # Add to PATH
           "$env:MINGW_ROOT\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Verify toolchain basics
