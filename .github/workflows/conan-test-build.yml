@@ -14,6 +14,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        path: openxilenv
     
     - name: Setup Python
       uses: actions/setup-python@v4
@@ -46,38 +48,18 @@ jobs:
         where cmake
         where ninja
     
-    - name: Install Conan
+    - name: Check out qt/qtbase@6.9
+      uses: actions/checkout@v4
+      with:
+        repository: qt/qtbase
+        ref: 6.9            # branch/tag/sha
+        fetch-depth: 1      # set 0 if you need full history
+        submodules: recursive  # qtbase uses nested 3rdparty; keep this if you need them
+        lfs: false
+        path: qtbase
+
+    - name: List directories
       shell: cmd
       run: |
-        python -m pip install --upgrade pip
-        pip install "conan>=2.0,<3.0"
-    
-    - name: Verify Conan installation
-      shell: cmd
-      run: |
-        conan --version
-    
-    - name: Run build test 
-      shell: cmd
-      run: |
-        conan profile detect --force
-        conan install . -pr:h=./conan_profiles/mingw14_claude --build=libpq/15.4
-    
-    - name: Test Conan info
-      shell: cmd
-      run: |
-        conan graph info . -pr:h=../conan_profiles/mingw14_claude -pr:b=../conan_profiles/buildtools
-    
-    - name: Display success message
-      shell: cmd
-      run: |
-        echo.
-        echo ================================
-        echo SUCCESS: Conan + MinGW working!
-        echo ================================
-        echo MinGW version: 
-        gcc --version | findstr gcc
-        echo Conan version:
-        conan --version
-        echo Test program output above shows zlib integration works
-        echo.
+        echo Current workspace: %GITHUB_WORKSPACE%
+        dir %GITHUB_WORKSPACE%
