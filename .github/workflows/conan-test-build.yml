@@ -60,6 +60,7 @@ jobs:
     - name: Run build test 
       shell: cmd
       run: |
+        conan profile detect --force
         conan install . -pr:h=./conan_profiles/mingw14_claude --build=libpq/15.4
     
     - name: Test Conan info

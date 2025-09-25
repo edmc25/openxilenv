@@ -47,10 +47,9 @@ class OpenXilEnvConan(ConanFile):
 
     def requirements(self):
         # Qt6 requirement
-        self.requires("qt/6.8.3")
+        # self.requires("qt/6.8.3")
 
-	# Force libiconv 1.18 because default 1.17 throws an error
-        # self.requires("libiconv/1.18", force=True)
+        self.requires("libpq/15.4")
 
         # Optional dependencies
         if self.options.build_with_fmu2_support or self.options.build_with_fmu3_support:

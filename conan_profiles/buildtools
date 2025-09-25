@@ -12,4 +12,4 @@ libiconv/*: libiconv/1.18
 
 [conf]
 tools.cmake.cmaketoolchain:generator=Ninja
-tools.build:compiler_executables={"c":"D:/a/_temp/msys64/mingw64/bin/gcc.exe","cpp":"D:/a/_temp/msys64/mingw64/bin/g++.exe"}
+tools.build:compiler_executables={"c":"D:/a/_temp/mingw/mingw64/bin/gcc.exe","cpp":"D:/a/_temp/mingw/mingw64/bin/g++.exe"}
