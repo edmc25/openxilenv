@@ -20,21 +20,19 @@ jobs:
       with:
         python-version: '3.11'
     
-    - name: Setup MinGW
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: MINGW64
-        update: true
-        install: >-
-          mingw-w64-x86_64-gcc
-          mingw-w64-x86_64-cmake
-          mingw-w64-x86_64-ninja
+    - name: Download niXman MinGW-w64 GCC 14.2.0
+      run: |
+        cd D:/a/_temp/
+        curl -L -o D:/a/_temp/mingw.7z https://github.com/niXman/mingw-builds-binaries/releases/download/14.2.0-rt_v12-rev2/x86_64-14.2.0-release-mcf-seh-ucrt-rt_v12-rev2.7z
+
+    - name: Extract & add to PATH
+      run: |
+        7z x D:/a/_temp/mingw.7z -oD:/a/_temp/mingw -y
     
     - name: Add MinGW to PATH
       shell: bash
       run: |
-        echo "D:/a/_temp/msys64/mingw64/bin" >> $GITHUB_PATH
-        echo "D:/a/_temp/msys64/usr/bin" >> $GITHUB_PATH
+        echo "D:/a/_temp/mingw/mingw64/bin" >> $GITHUB_PATH
     
     - name: Verify MinGW installation
       shell: cmd
@@ -59,10 +57,10 @@ jobs:
       run: |
         conan --version
     
-    - name: Run build batch 
+    - name: Run build test 
       shell: cmd
       run: |
-        call build_openxilenv.bat
+        conan install . -pr:h=./conan_profiles/mingw14_claude --build=libpq/15.4
     
     - name: Test Conan info
       shell: cmd

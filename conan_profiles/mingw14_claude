@@ -2,9 +2,9 @@
 os=Windows
 arch=x86_64
 compiler=gcc
-compiler.version=15
+compiler.version=14
 compiler.libcxx=libstdc++11
-compiler.cppstd=gnu23
+compiler.cppstd=gnu17
 build_type=Release
 
 [replace_requires]
