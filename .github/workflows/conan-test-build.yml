@@ -53,9 +53,9 @@ jobs:
       with:
         repository: qt/qtbase
         ref: 6.9            # branch/tag/sha
-        fetch-depth: 1      # set 0 if you need full history
         submodules: recursive  # qtbase uses nested 3rdparty; keep this if you need them
-        lfs: false
+        show-progress: true
+        lfs: true
         path: qtbase
 
     - name: List directories
@@ -64,13 +64,54 @@ jobs:
         cd D:\a\openxilenv\openxilenv
         dir
 
+    - name: Prepare Qt Build
+      shell: cmd 
+      run: |
+        cd D:\a\openxilenv\openxilenv
+        mkdir qtbase-build
+        cd qtbase-build
+        ..\qtbase\configure.bat -debug-and-release -opensource -confirm-license -sql-sqlite -sqlite qt -prefix D:\a\Qt6.9
+
     - name: Build Qt
       shell: cmd 
       run: |
-        cd D:\a\openxilenv\openxilenv\qtbase
-        dir
-        mkdir build
-        cd build
-        ..\configure.bat -debug-and-release -opensource -confirm-license -prefix D:\a\Qt6.9
-        dir
+        cd D:\a\openxilenv\openxilenv\qtbase-build
         cmake --build . --parallel
+
+    - name: Install Qt (Release)
+      shell: cmd
+      run: |
+        cd D:\a\openxilenv\openxilenv\qtbase-build
+        cmake --install . --config Release
+
+    - name: Prepare OpenXilEnv Build
+      shell: cmd 
+      run: |
+        cd D:\a\openxilenv\openxilenv
+        mkdir openxilenv-build
+        cd openxilenv-build
+        cmake -G Ninja -DCMAKE_INSTALL_PREFIX=D:\a\OpenXilEnv ..\openxilenv
+
+    - name: Build OpenXilEnv
+      shell: cmd 
+      run: |
+        cd D:\a\openxilenv\openxilenv\openxilenv-build
+        cmake --build .
+
+    - name: Install OpenXilEnv 
+      shell: cmd
+      run: |
+        cd D:\a\openxilenv\openxilenv\openxilenv-build
+        cmake --install .
+
+    - name: Deploy Qt DLLs with windeployqt
+      shell: pwsh
+      run: |
+        cd D:\a\OpenXilEnv
+        & "D:\a\Qt6.9\bin\windeployqt.exe" XilEnvGui.exe
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: OpenXilEnv-Windows-Qt6.9-MinGW14.2
+        path: D:/a/OpenXilEnv/**
