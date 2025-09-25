@@ -4,7 +4,7 @@ arch=x86_64
 compiler=gcc
 compiler.cppstd=17
 compiler.libcxx=libstdc++11
-compiler.version=14
+compiler.version=15
 os=Windows
 
 [replace_requires]
@@ -12,4 +12,4 @@ libiconv/*: libiconv/1.18
 
 [conf]
 tools.cmake.cmaketoolchain:generator=Ninja
-tools.build:compiler_executables={"c":"C:/app/mingw_x86_64-14.2.0-release-mcf-seh-ucrt-rt_v12-rev2/mingw64/bin/gcc.exe","cpp":"C:/app/mingw_x86_64-14.2.0-release-mcf-seh-ucrt-rt_v12-rev2/mingw64/bin/g++.exe"}
+tools.build:compiler_executables={"c":"D:/a/_temp/msys64/mingw64/bin/gcc.exe","cpp":"D:/a/_temp/msys64/mingw64/bin/g++.exe"}
