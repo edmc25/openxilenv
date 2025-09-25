@@ -61,5 +61,16 @@ jobs:
     - name: List directories
       shell: cmd
       run: |
-        echo Current workspace: %GITHUB_WORKSPACE%
-        dir %GITHUB_WORKSPACE%
+        cd D:\a\openxilenv\openxilenv
+        dir
+
+    - name: Build Qt
+      shell: cmd 
+      run: |
+        cd D:\a\openxilenv\openxilenv\qtbase
+        dir
+        mkdir build
+        cd build
+        ..\configure.bat -debug-and-release -opensource -confirm-license -prefix D:\a\Qt6.9
+        dir
+        cmake --build . --parallel
