@@ -48,41 +48,13 @@ jobs:
         where cmake
         where ninja
     
-    - name: Check out qt/qtbase@6.9
-      uses: actions/checkout@v4
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
       with:
-        repository: qt/qtbase
-        ref: 6.9            # branch/tag/sha
-        submodules: recursive  # qtbase uses nested 3rdparty; keep this if you need them
-        show-progress: true
-        lfs: true
-        path: qtbase
-
-    - name: List directories
-      shell: cmd
-      run: |
-        cd D:\a\openxilenv\openxilenv
-        dir
-
-    - name: Prepare Qt Build
-      shell: cmd 
-      run: |
-        cd D:\a\openxilenv\openxilenv
-        mkdir qtbase-build
-        cd qtbase-build
-        ..\qtbase\configure.bat -debug-and-release -opensource -confirm-license -sqlite qt -prefix D:\a\Qt6.9
-
-    - name: Build Qt
-      shell: cmd 
-      run: |
-        cd D:\a\openxilenv\openxilenv\qtbase-build
-        cmake --build . --parallel
-
-    - name: Install Qt (Release)
-      shell: cmd
-      run: |
-        cd D:\a\openxilenv\openxilenv\qtbase-build
-        cmake --install . --config Release
+        version: '6.9'
+        host: 'windows'
+        target: 'desktop'
+        modules: 'qtbase qttools'
 
     - name: Prepare OpenXilEnv Build
       shell: cmd 
@@ -108,7 +80,7 @@ jobs:
       shell: pwsh
       run: |
         cd D:\a\OpenXilEnv
-        & "D:\a\Qt6.9\bin\windeployqt.exe" XilEnvGui.exe
+        windeployqt.exe XilEnvGui.exe
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
