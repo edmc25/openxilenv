@@ -62,7 +62,7 @@ jobs:
         cd D:\a\openxilenv\openxilenv
         mkdir openxilenv-build
         cd openxilenv-build
-        cmake -G Ninja -DCMAKE_INSTALL_PREFIX=D:\a\OpenXilEnv ..\openxilenv
+        cmake -G Ninja -DCMAKE_INSTALL_PREFIX=D:\a\tools\OpenXilEnv ..\openxilenv
 
     - name: Build OpenXilEnv
       shell: cmd 
@@ -79,11 +79,11 @@ jobs:
     - name: Deploy Qt DLLs with windeployqt
       shell: pwsh
       run: |
-        cd D:\a\OpenXilEnv
+        cd D:\a\tools\OpenXilEnv
         windeployqt.exe XilEnvGui.exe
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: OpenXilEnv-Windows-Qt6.9-MinGW14.2
-        path: D:/a/OpenXilEnv/**
+        path: D:/a/tools/OpenXilEnv/**
