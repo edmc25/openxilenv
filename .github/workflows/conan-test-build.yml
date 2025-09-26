@@ -70,7 +70,7 @@ jobs:
         cd D:\a\openxilenv\openxilenv
         mkdir qtbase-build
         cd qtbase-build
-        ..\qtbase\configure.bat -debug-and-release -opensource -confirm-license -sql-sqlite -sqlite qt -prefix D:\a\Qt6.9
+        ..\qtbase\configure.bat -debug-and-release -opensource -confirm-license -sqlite qt -prefix D:\a\Qt6.9
 
     - name: Build Qt
       shell: cmd 
