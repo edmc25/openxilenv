@@ -54,7 +54,6 @@ jobs:
         version: '6.9'
         host: 'windows'
         target: 'desktop'
-        modules: 'qtbase qttools'
 
     - name: Prepare OpenXilEnv Build
       shell: cmd 
