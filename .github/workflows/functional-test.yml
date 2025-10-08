@@ -10,15 +10,13 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      #- name: Checkout repository
+      #  uses: actions/checkout@v4
 
       - name: Download artifact from Windows build workflow
         uses: actions/download-artifact@v5.0.0
         with:
-          name: OpenXilEnv-Windows-Qt6_9_2
-          path: $GITHUB_WORKSPACE  
-          run-id: 18345377337
+          artifact-ids: 4215147590
 
       - name: Check artifact download
         shell: cmd
