@@ -41,5 +41,5 @@ jobs:
       - name: Run functional test commands
         run: |
           echo "Running functional tests..."
-          cd .\openxilenv\Samples\Automation\Python\OpenXilEnv
-          python ..\..\..\..\test\functional\test_basic.py
+          .\.venv\Scripts\activate
+          pytest -v
