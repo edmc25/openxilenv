@@ -37,12 +37,9 @@ jobs:
           python -m pip install .\dist\OpenXilEnv-0.1-py3-none-any.whl  # Install the built wheel file
           python .\automationExample.py "d:\a\openxilenv\openxilenv\OpenXilEnv-Windows-Qt6_9_2" "d:\a\openxilenv\openxilenv\openxilenv\Samples\Configurations\ElectricCarSample.ini" # Run the automation script
 
-
           
-      #- name: Run functional test commands
-      #  run: |
-      #    echo "Running functional tests..."
-      #    # dir ./artifact-content
-      #    # Add your actual test commands below
-      #    # Example:
-      #    # .\artifact-content\your-test-runner.exe --run-tests
+      - name: Run functional test commands
+        run: |
+          echo "Running functional tests..."
+          cd .\test\functional
+          python .\test_basic.py
