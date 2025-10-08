@@ -19,6 +19,7 @@ jobs:
           repository: edmc25/openxilenv
           run-id: 18345377337
           artifact-ids: 4215147590
+          github-token: ${{ secrets.GH_PAT }}
 
       - name: Check artifact download
         shell: cmd
