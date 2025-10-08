@@ -20,7 +20,7 @@ jobs:
           run-id: 18345377337
           artifact-ids: 4215147590
           github-token: ${{ secrets.GH_PAT }}
-          path: $GITHUB_WORKSPACE\OpenXilEnv-Windows-Qt6_9_2
+          path: OpenXilEnv-Windows-Qt6_9_2
 
       - name: Check artifact download
         shell: cmd
