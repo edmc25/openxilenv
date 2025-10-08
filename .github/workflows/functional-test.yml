@@ -35,7 +35,7 @@ jobs:
           cd .\openxilenv\Samples\Automation\Python\OpenXilEnv\  # Navigate to the directory containing automationExample.py
           python .\setup.py bdist_wheel  # Build the wheel file
           python -m pip install .\dist\OpenXilEnv-0.1-py3-none-any.whl  # Install the built wheel file
-          python .\automationExample.py "%GITHUB_WORKSPACE%\OpenXilEnv-Windows-Qt6_9_2" "%GITHUB_WORKSPACE%\openxilenv\Samples\Configurations\ElectricCarSample.ini" # Run the automation script
+          python .\automationExample.py "d:\a\openxilenv\openxilenv\OpenXilEnv-Windows-Qt6_9_2" "d:\a\openxilenv\openxilenv\openxilenv\Samples\Configurations\ElectricCarSample.ini" # Run the automation script
 
 
           
