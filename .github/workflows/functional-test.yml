@@ -1,0 +1,28 @@
+name: Functional Test
+
+on:
+  push:
+    branches: [ test/first-functional-test ]
+  workflow_dispatch:  # Allows manual triggering from GitHub UI
+
+jobs:
+  run-functional-test:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      #- name: Download artifact from previous workflow
+      #  uses: actions/download-artifact@v4
+      #  with:
+      #    name: your-artifact-name  # Replace with the actual artifact name
+      #    path: ./artifact-content  # Optional: where to place the downloaded files
+
+      - name: Run functional test commands
+        run: |
+          echo "Running functional tests..."
+          # dir ./artifact-content
+          # Add your actual test commands below
+          # Example:
+          # .\artifact-content\your-test-runner.exe --run-tests
