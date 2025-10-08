@@ -13,16 +13,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      #- name: Download artifact from previous workflow
-      #  uses: actions/download-artifact@v4
-      #  with:
-      #    name: your-artifact-name  # Replace with the actual artifact name
-      #    path: ./artifact-content  # Optional: where to place the downloaded files
+      - name: Download artifact from Windows build workflow
+        uses: actions/download-artifact@v5.0.0
+        with:
+          name: OpenXilEnv-Windows-Qt6_9_2
+          path: $GITHUB_WORKSPACE  
+          run-id: 18345377337
 
-      - name: Run functional test commands
+      - name: Check artifact download
+        shell: cmd
         run: |
-          echo "Running functional tests..."
-          # dir ./artifact-content
-          # Add your actual test commands below
-          # Example:
-          # .\artifact-content\your-test-runner.exe --run-tests
+          echo Current workspace: %GITHUB_WORKSPACE%
+          echo.
+          dir %GITHUB_WORKSPACE%
+          
+      #- name: Run functional test commands
+      #  run: |
+      #    echo "Running functional tests..."
+      #    # dir ./artifact-content
+      #    # Add your actual test commands below
+      #    # Example:
+      #    # .\artifact-content\your-test-runner.exe --run-tests
