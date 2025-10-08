@@ -22,12 +22,11 @@ jobs:
           github-token: ${{ secrets.GH_PAT }}
           path: OpenXilEnv-Windows-Qt6_9_2
 
-      - name: Check artifact download
+      - name: Try to run OpenXilEnv executable
         shell: cmd
         run: |
-          echo Current workspace: %GITHUB_WORKSPACE%
-          echo.
-          dir %GITHUB_WORKSPACE%\OpenXilEnv-Windows-Qt6_9_2
+          cd %GITHUB_WORKSPACE%\OpenXilEnv-Windows-Qt6_9_2
+          .\XilEnvGui.exe
           
       #- name: Run functional test commands
       #  run: |
