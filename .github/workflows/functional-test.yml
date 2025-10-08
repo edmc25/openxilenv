@@ -28,12 +28,11 @@ jobs:
       - name: Prepare test environment
         run: |
           echo "Setting up test environment..."
-          cd %GITHUB_WORKSPACE%\OpenXilEnv-Windows-Qt6_9_2
           python -m venv .venv  # Create a virtual environment
           .\.venv\Scripts\activate  # Activate the virtual environment
           python -m pip install --upgrade pip   # Upgrade pip
           python -m pip install setuptools wheel pytest # Install necessary packages
-          cd .\Samples\Automation\Python\OpenXilEnv\  # Navigate to the directory containing automationExample.py
+          cd .\openxilenv\Samples\Automation\Python\OpenXilEnv\  # Navigate to the directory containing automationExample.py
           python .\setup.py bdist_wheel  # Build the wheel file
           python -m pip install .\dist\OpenXilEnv-0.1-py3-none-any.whl  # Install the built wheel file
           python .\automationExample.py "%GITHUB_WORKSPACE%\OpenXilEnv-Windows-Qt6_9_2" "%GITHUB_WORKSPACE%\openxilenv\Samples\Configurations\ElectricCarSample.ini" # Run the automation script
