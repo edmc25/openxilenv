@@ -6,8 +6,8 @@ OpenXilEnv is a lightweight SiL/HiL environment. At the moment, OpenXilEnv focus
 
 ## SiL
 
-With a **S**oftware **I**n the **L**oop system, it is possible to run and test embedded software without a target platform or compiler.  
-XilEnv provides an environment to set up a SiL system on Windows or Linux hosts. It clearly separates its own components from the embedded software under test through a network layer. Each component can run in its own executable, providing memory protection between them.  
+With a **S**oftware **I**n the **L**oop system, it is possible to run and test embedded software without a target platform or compiler.
+XilEnv provides an environment to set up a SiL system on Windows or Linux hosts. It clearly separates its own components from the embedded software under test through a network layer. Each component can run in its own executable, providing memory protection between them.
 
 Communication between the software under test, models, and XilEnv is done via sockets or (on Windows) Named Pipes / (on Linux) local sockets. These are used for:
 - Signal transfers
@@ -32,9 +32,9 @@ Main features:
 - Residual bus simulation for missing CAN (FD) members.
 - Recording and stimulation supported via text or MDF3 files.
 
-The DLL/shared library **XilEnvExtProc64.dll/.so** or **XilEnvExtProc32.dll/.so** provides the interface for the embedded test software or model. This DLL/shared library must be loaded dynamically. The main module **XilEnvExtProcMain.c** handles this automatically. 
+The DLL/shared library **XilEnvExtProc64.dll/.so** or **XilEnvExtProc32.dll/.so** provides the interface for the embedded test software or model. This DLL/shared library must be loaded dynamically. The main module **XilEnvExtProcMain.c** handles this automatically.
 
-Interface functions are declared in **XilEnvRtProc.h**.  
+Interface functions are declared in **XilEnvRtProc.h**.
 
 An example can be found in `Samples/ExternalProcesses/ExtProc_Simple`.
 
@@ -42,7 +42,7 @@ An example can be found in `Samples/ExternalProcesses/ExtProc_Simple`.
 
 ## HiL Option
 
-To use OpenXilEnv as a HiL system, a second Linux PC is required. Currently, only SocketCAN (FD) interfaces are supported.  
+To use OpenXilEnv as a HiL system, a second Linux PC is required. Currently, only SocketCAN (FD) interfaces are supported.
 
 A defined time response of <1 ms is achievable if the RT-Preempt patch is installed.
 
@@ -50,11 +50,11 @@ To meet deterministic timing requirements, XilEnv is split into two parts:
 - **LinuxRemoteMasterCore.so**: components with defined time response (run on Linux with RT-Preempt)
 - **XilEnv executable**: non–real-time components (can run on Windows or Linux)
 
-A direct Ethernet connection between both PCs is recommended.  
+A direct Ethernet connection between both PCs is recommended.
 
-If a model is required, it must be compiled for Linux and linked with **LinuxRemoteMasterCore.so**.  
+If a model is required, it must be compiled for Linux and linked with **LinuxRemoteMasterCore.so**.
 
-If no model is needed, use **LinuxRemoteMaster.out**.  
+If no model is needed, use **LinuxRemoteMaster.out**.
 
 The **RemoteStartServer** service should be installed and active on the second PC so that XilEnv can copy and start required executables remotely.
 
@@ -176,7 +176,8 @@ void cyclic_test_object(void);
 void terminate_test_object(void);
 ```
 
-These functions define initialization, cyclic behavior, and termination of your test object.  
+These functions define initialization, cyclic behavior, and termination of your test object.
+
 Example: `Samples/ExternalProcesses/ExtProc_Simple.c`
 
 ```c
@@ -226,7 +227,7 @@ void terminate_test_object(void) {}
 Build example:
 ```bash
 # Windows
-gcc -g -I C:\path\to\openxilenv\install_win\include ExtProc_Simple.c -o ExtProc_Simple.exe
+gcc -g -I "C:\path\to\openxilenv\install_win\include" ExtProc_Simple.c -o ExtProc_Simple.exe
 
 # Linux
 gcc -g -I ~/openxilenv/install_linux/include ExtProc_Simple.c -ldl -lpthread -o ExtProc_Simple
@@ -242,3 +243,10 @@ ExtProc_Simple.exe -q2 XilEnvGui.exe -ini C:\path\to\ElectricCarSample.ini
 export PATH=$PATH:~/openxilenv/install_linux
 ./ExtProc_Simple -q2 XilEnvGui -ini ~/openxilenv/Samples/Configurations/ElectricCarSample.ini
 ```
+Ensure both ExtProc_Simple and XilEnvGui are available in the same folder or included in your PATH.
+
+## License
+This project is part of the Eclipse Foundation and licensed under the [Apache License 2.0](LICENSE.txt).
+
+## Contributing
+Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for details.
