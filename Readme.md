@@ -32,9 +32,10 @@ Main features:
 - Residual bus simulation for missing CAN (FD) members.
 - Recording and stimulation supported via text or MDF3 files.
 
-The DLL/shared library **XilEnvExtProc64.dll/.so** or **XilEnvExtProc32.dll/.so** provides the interface for the embedded test software or model.  
-This DLL/shared library must be loaded dynamically. The main module **XilEnvExtProcMain.c** handles this automatically.  
+The DLL/shared library **XilEnvExtProc64.dll/.so** or **XilEnvExtProc32.dll/.so** provides the interface for the embedded test software or model. This DLL/shared library must be loaded dynamically. The main module **XilEnvExtProcMain.c** handles this automatically. 
+
 Interface functions are declared in **XilEnvRtProc.h**.  
+
 An example can be found in `Samples/ExternalProcesses/ExtProc_Simple`.
 
 ---
@@ -42,6 +43,7 @@ An example can be found in `Samples/ExternalProcesses/ExtProc_Simple`.
 ## HiL Option
 
 To use OpenXilEnv as a HiL system, a second Linux PC is required. Currently, only SocketCAN (FD) interfaces are supported.  
+
 A defined time response of <1 ms is achievable if the RT-Preempt patch is installed.
 
 To meet deterministic timing requirements, XilEnv is split into two parts:
@@ -49,7 +51,9 @@ To meet deterministic timing requirements, XilEnv is split into two parts:
 - **XilEnv executable**: non–real-time components (can run on Windows or Linux)
 
 A direct Ethernet connection between both PCs is recommended.  
+
 If a model is required, it must be compiled for Linux and linked with **LinuxRemoteMasterCore.so**.  
+
 If no model is needed, use **LinuxRemoteMaster.out**.  
 
 The **RemoteStartServer** service should be installed and active on the second PC so that XilEnv can copy and start required executables remotely.
@@ -117,7 +121,7 @@ cmake --build .
 cmake --install .
 ```
 
-(Optional) Deploy Qt DLLs:
+#### (Optional) Deploy Qt DLLs
 ```cmd
 cd C:\path\to\openxilenv\install_win
 windeployqt6.exe XilEnvGui.exe
