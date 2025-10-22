@@ -35,7 +35,7 @@ jobs:
           python -m pip install setuptools wheel pytest # Install necessary packages
           cd .\openxilenv\Samples\Automation\Python\OpenXilEnv\  # Navigate to the directory containing setup.py
           python .\setup.py bdist_wheel  # Build the wheel file
-          python -m pip install .\dist\OpenXilEnv-0.1-py3-none-any.whl  # Install the built wheel file
+          python -m pip install .\dist\*.whl  # Install the built wheel file
 
       - name: Run pytest
         run: |
@@ -70,7 +70,7 @@ jobs:
           python -m pip install setuptools wheel pytest # Install necessary packages
           cd ./openxilenv/Samples/Automation/Python/OpenXilEnv/  # Navigate to the directory containing setup.py
           python ./setup.py bdist_wheel  # Build the wheel file
-          python -m pip install ./dist/OpenXilEnv-0.1-py3-none-any.whl  # Install the built wheel file
+          python -m pip install ./dist/*.whl  # Install the built wheel file
 
       - name: Run pytest
         run: |
