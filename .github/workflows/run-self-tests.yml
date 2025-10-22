@@ -1,4 +1,4 @@
-name: Run Self Tests on Windows
+name: Run Self Tests
 
 on:
   push:
@@ -41,4 +41,39 @@ jobs:
         run: |
           echo "Running self tests..."
           .\.venv\Scripts\activate
+          pytest -v
+
+  run-self-tests-on-ubuntu:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          path: openxilenv
+
+      - name: Download artifact from latest Linux build
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: ubuntu-build.yml
+          workflow_conclusion: success  # Only download from successful runs
+          name: OpenXilEnv-Linux-Qt6_4_2
+          path: OpenXilEnv-Linux-Qt6_4_2
+          github_token: ${{ secrets.GH_PAT }}
+          
+      - name: Prepare test environment
+        run: |
+          echo "Setting up test environment..."
+          python -m venv .venv  # Create a virtual environment
+          source .venv/bin/activate  # Activate the virtual environment
+          python -m pip install --upgrade pip   # Upgrade pip
+          python -m pip install setuptools wheel pytest # Install necessary packages
+          cd ./openxilenv/Samples/Automation/Python/OpenXilEnv/  # Navigate to the directory containing setup.py
+          python ./setup.py bdist_wheel  # Build the wheel file
+          python -m pip install ./dist/OpenXilEnv-0.1-py3-none-any.whl  # Install the built wheel file
+
+      - name: Run pytest
+        run: |
+          echo "Running self tests..."
+          source .venv/bin/activate
           pytest -v
