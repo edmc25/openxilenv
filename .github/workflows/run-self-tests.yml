@@ -20,7 +20,7 @@ jobs:
       - name: Download artifact from latest Windows build
         uses: dawidd6/action-download-artifact@v11
         with:
-          github-token: ${{ secrets.GH_PAT }}
+          github_token: ${{ secrets.GH_PAT }}
           workflow: windows-build.yml
           workflow_conclusion: success
           name: OpenXilEnv-Windows-Qt6_9_2
