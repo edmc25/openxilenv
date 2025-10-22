@@ -1,0 +1,44 @@
+name: Run Self Tests on Windows
+
+on:
+  push:
+    branches: [ test/first-functional-tests ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Allows manual triggering from GitHub UI
+
+jobs:
+  run-self-tests-on-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          path: openxilenv
+
+      - name: Download artifact from Windows build workflow
+        uses: actions/download-artifact@v5
+        with:
+          repository: edmc25/openxilenv
+          run-id: 18345377337
+          artifact-ids: 4215147590
+          github-token: ${{ secrets.GH_PAT }}
+          path: OpenXilEnv-Windows-Qt6_9_2
+          
+      - name: Prepare test environment
+        run: |
+          echo "Setting up test environment..."
+          python -m venv .venv  # Create a virtual environment
+          .\.venv\Scripts\activate  # Activate the virtual environment
+          python -m pip install --upgrade pip   # Upgrade pip
+          python -m pip install setuptools wheel pytest # Install necessary packages
+          cd .\openxilenv\Samples\Automation\Python\OpenXilEnv\  # Navigate to the directory containing setup.py
+          python .\setup.py bdist_wheel  # Build the wheel file
+          python -m pip install .\dist\OpenXilEnv-0.1-py3-none-any.whl  # Install the built wheel file
+
+      - name: Run pytest
+        run: |
+          echo "Running self tests..."
+          .\.venv\Scripts\activate
+          pytest -v
