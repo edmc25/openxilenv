@@ -28,7 +28,7 @@ def xilEnvInstallationPath() -> Path:
         if system == "Windows":
             xilEnvInstallationPath = Path(r"d:\a\openxilenv\openxilenv\OpenXilEnv-Windows-Qt6_9_2")
         elif system == "Linux":
-            xilEnvInstallationPath = Path("/home/runner/work/openxilenv/openxilenv/OpenXilEnv-Linux")
+            xilEnvInstallationPath = Path("/home/runner/work/openxilenv/openxilenv/OpenXilEnv-Linux-Qt6_4_2")
         else:
             pytest.skip(f"Unsupported platform: {system}")
             return None
