@@ -1,5 +1,6 @@
 import os
 import sys
+import platform
 from pathlib import Path
 
 # Make the bundled Samples/Automation Python package importable for tests.
@@ -23,7 +24,15 @@ def xilEnvInstallationPath() -> Path:
     if env:
         xilEnvInstallationPath = Path(env)
     else:
-        xilEnvInstallationPath = Path(r"d:\a\openxilenv\openxilenv\OpenXilEnv-Windows-Qt6_9_2")
+        system = platform.system()
+        if system == "Windows":
+            xilEnvInstallationPath = Path(r"d:\a\openxilenv\openxilenv\OpenXilEnv-Windows-Qt6_9_2")
+        elif system == "Linux":
+            xilEnvInstallationPath = Path("/home/runner/work/openxilenv/openxilenv/OpenXilEnv-Linux")
+        else:
+            pytest.skip(f"Unsupported platform: {system}")
+            return None
+    
     assert xilEnvInstallationPath.is_dir(), f"no such directory {xilEnvInstallationPath}"
     return xilEnvInstallationPath
 
@@ -38,6 +47,14 @@ def iniFilePath() -> Path:
     if env:
         iniFilePath = Path(env)
     else:
-        iniFilePath = Path(r"d:\a\openxilenv\openxilenv\openxilenv\Samples\Configurations\ElectricCarSample.ini")
+        system = platform.system()
+        if system == "Windows":
+            iniFilePath = Path(r"d:\a\openxilenv\openxilenv\openxilenv\Samples\Configurations\ElectricCarSample.ini")
+        elif system == "Linux":
+            iniFilePath = Path("/home/runner/work/openxilenv/openxilenv/openxilenv/Samples/Configurations/ElectricCarSample.ini")
+        else:
+            pytest.skip(f"Unsupported platform: {system}")
+            return None
+    
     assert iniFilePath.is_file(), f"no such file {iniFilePath}"
     return iniFilePath
