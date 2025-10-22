@@ -17,13 +17,13 @@ jobs:
         with:
           path: openxilenv
 
-      - name: Download artifact from Windows build workflow
-        uses: actions/download-artifact@v5
+      - name: Download artifact from latest Windows build
+        uses: dawidd6/action-download-artifact@v11
         with:
-          repository: edmc25/openxilenv
-          run-id: 18345377337
-          artifact-ids: 4215147590
           github-token: ${{ secrets.GH_PAT }}
+          workflow: windows-build.yml
+          workflow_conclusion: success
+          name: OpenXilEnv-Windows-Qt6_9_2
           path: OpenXilEnv-Windows-Qt6_9_2
           
       - name: Prepare test environment
