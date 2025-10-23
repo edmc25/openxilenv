@@ -30,4 +30,5 @@ jobs:
         run: |
           cd /home/runner/work/openxilenv/openxilenv/OpenXilEnv-Linux-Qt6_4_2
           ldd /home/runner/work/openxilenv/openxilenv/OpenXilEnv-Linux-Qt6_4_2/libXilEnvRpc.so
+          nm -D libXilEnvRpc.so | grep " U "
           
