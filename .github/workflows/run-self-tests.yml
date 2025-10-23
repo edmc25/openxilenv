@@ -1,12 +1,10 @@
 name: Run Self Tests
 
 on:
+  push:
+    branches: [ bugfix/fix-xilenvrpc-for-linux ]
   pull_request:
     branches: [ main ]
-  workflow_run:
-    workflows: [Build OpenXilEnv]
-    types:
-      - completed
   workflow_dispatch:  # Allows manual triggering from GitHub UI
 
 jobs:

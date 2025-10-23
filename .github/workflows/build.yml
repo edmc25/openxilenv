@@ -1,10 +1,6 @@
 name: Build OpenXilEnv
 
 on:
-  push:
-    branches: [ bugfix/fix-xilenvrpc-for-linux ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:  # Allow manual triggers
 
 jobs:
