@@ -42,5 +42,7 @@ jobs:
       - name: Run pytest
         run: |
           echo "Running self tests..."
+          ls -a /home/runner/work/openxilenv/openxilenv/openxilenv/Samples/Configurations/
+          ls -a /home/runner/work/openxilenv/openxilenv/OpenXilEnv-Linux-Qt6_4_2
           source .venv/bin/activate
           pytest -v
