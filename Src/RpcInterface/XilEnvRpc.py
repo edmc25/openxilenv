@@ -1,4 +1,5 @@
 import ctypes as ct
+import sys
 
 class CAN_ACCEPTANCE_WINDOWS(ct.Structure):
 	_fields_ = [('Channel', ct.c_int), ('StartId', ct.c_int), ('EndId', ct.c_int), ('Fill1', ct.c_int)]
@@ -337,7 +338,7 @@ class XilEnvRpc:
 	__ApiVersion = 0
 
 	def __init__(self, DllPath):
-		self.__Dll = ct.windll.LoadLibrary(DllPath)
+		self.__Dll = (ct.windll.LoadLibrary(DllPath) if sys.platform == 'win32' else ct.cdll.LoadLibrary(DllPath))
 # Connect
 		self.__Dll.XilEnv_GetAPIVersion.restype = ct.c_int
 		self.__Dll.XilEnv_GetAPIVersion.argtypes = None
