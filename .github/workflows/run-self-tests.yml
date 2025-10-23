@@ -1,8 +1,6 @@
 name: Run Self Tests
 
 on:
-  push:
-    branches: [ bugfix/fix-xilenvrpc-for-linux ]
   pull_request:
     branches: [ main ]
   workflow_run:
