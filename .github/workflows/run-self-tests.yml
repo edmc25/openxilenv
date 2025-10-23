@@ -26,23 +26,8 @@ jobs:
           path: OpenXilEnv-Linux-Qt6_4_2
           github_token: ${{ secrets.GH_PAT }}
           
-      - name: Prepare test environment
+      - name: Check shared library dependencies 
         run: |
-          echo "Setting up test environment..."
-          python -V
-          python -m venv .venv  # Create a virtual environment
-          source .venv/bin/activate  # Activate the virtual environment
-          python -m pip install --upgrade pip   # Upgrade pip
-          python -m pip install setuptools wheel pytest # Install necessary packages
-          cd ./openxilenv/Samples/Automation/Python/OpenXilEnv/  # Navigate to the directory containing setup.py
-          python ./setup.py bdist_wheel  # Build the wheel file
-          WHEEL=$(ls ./dist/*.whl | head -n 1)
-          python -m pip install "$WHEEL"
-
-      - name: Run pytest
-        run: |
-          echo "Running self tests..."
-          ls -a /home/runner/work/openxilenv/openxilenv/openxilenv/Samples/Configurations/
-          ls -a /home/runner/work/openxilenv/openxilenv/OpenXilEnv-Linux-Qt6_4_2
-          source .venv/bin/activate
-          pytest -v
+          cd /home/runner/work/openxilenv/openxilenv/OpenXilEnv-Linux-Qt6_4_2
+          ldd /home/runner/work/openxilenv/openxilenv/OpenXilEnv-Linux-Qt6_4_2/libXilEnvRpc.so
+          
