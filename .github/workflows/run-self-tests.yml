@@ -29,6 +29,7 @@ jobs:
       - name: Prepare test environment
         run: |
           echo "Setting up test environment..."
+          python -V
           python -m venv .venv  # Create a virtual environment
           source .venv/bin/activate  # Activate the virtual environment
           python -m pip install --upgrade pip   # Upgrade pip
