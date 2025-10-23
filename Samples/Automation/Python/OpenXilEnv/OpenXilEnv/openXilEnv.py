@@ -9,8 +9,8 @@ from OpenXilEnv.XilEnvRpc import *
 class OpenXilEnv:
 
     def __init__(self, xilEnvPath):
-        self.__xilEnvDllPath = os.path.join(xilEnvPath, "XilEnvRpc.dll")
-        self.__xilEnvExePath = os.path.join(xilEnvPath, "XilEnvGui.exe")
+        self.__xilEnvDllPath = os.path.join(xilEnvPath, "libXilEnvRpc.so")
+        self.__xilEnvExePath = os.path.join(xilEnvPath, "XilEnvGui")
 
         self.__xilEnvProcess = None
 
