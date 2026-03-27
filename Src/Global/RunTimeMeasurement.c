@@ -18,6 +18,8 @@
 #include <stdint.h>
 #include "Platform.h"
 #include "MyMemory.h"
+#include "MemZeroAndCopy.h"
+#include "PrintFormatToString.h"
 #include "RunTimeMeasurement.h"
 
 //#define FUNCTION_RUNTIME
@@ -73,7 +75,7 @@ int BeginRuntimeMeassurement (const char *Name, int id)
             RuntimeInfosSize += 64;
             RuntimeInfos = (RUNTIME_INFOS*)my_realloc (RuntimeInfos, RuntimeInfosSize * sizeof (RUNTIME_INFOS));
         }
-        memset (&(RuntimeInfos[id]), 0, sizeof (RUNTIME_INFOS));
+        MEMSET (&(RuntimeInfos[id]), 0, sizeof (RUNTIME_INFOS));
     } 
     RuntimeInfos[id].CallCounter++;
     RuntimeInfos[id].Start = GetTimeStamp();
@@ -111,7 +113,7 @@ static double GetCPUFreqFromRegestry (void)
 }
 
 
-int GetRuntimeMeassurement (int id, char *line)
+int GetRuntimeMeassurement (int id, char *line, int par_MaxLine)
 {
 	static double CPUClock;
     if (id == 0) {                          // beginning
@@ -121,7 +123,7 @@ int GetRuntimeMeassurement (int id, char *line)
 		CPUClock = GetCPUFreqFromRegestry ();
 	}
     if (id >= RuntimeInfosCount) return 0;  // Ende
-    sprintf (line, "%s  %I64d Call(s)  %fs %fs/call",  //%I64d CPU-Clocks", 
+    PrintFormatToString (line, par_MaxLine, "%s  %I64d Call(s)  %fs %fs/call",  //%I64d CPU-Clocks",
              RuntimeInfos[id].FunctionName,
              RuntimeInfos[id].CallCounter,
              (double)RuntimeInfos[id].Sum / CPUClock,
