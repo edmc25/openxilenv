@@ -27,6 +27,7 @@
 #include <QScrollBar>
 #include <QDoubleValidator>
 #include <QComboBox>
+#include <QColorDialog>
 #include <QApplication>
 #include "FileDialog.h"
 #include "TextWindowChangeValueDialog.h"
@@ -53,9 +54,9 @@ TextWidget::TextWidget(QString par_WindowTitle, MdiSubWindow *par_SubWindow, Mdi
     MdiWindowWidget(par_WindowTitle, par_SubWindow, par_Type, par_parent),
     m_ObserverConnection(this)
 {
+    m_EnableUserBackgroundColor = false;
     m_ShowUnitColumn = s_main_ini_val.TextDefaultShowUnitColumn;
     m_ShowDisplayTypeColumn = s_main_ini_val.TextDefaultShowDispayTypeColumn;
-    m_BackgroundColor = QColor(Qt::white);
     m_icon = 0;
     m_tableViewVariables = new TextTableView(this);
 
@@ -129,6 +130,13 @@ TextWidget::TextWidget(QString par_WindowTitle, MdiSubWindow *par_SubWindow, Mdi
     m_LoadFromSnapshotAct = new QAction(tr("load from snapshot"), this);
     connect(m_LoadFromSnapshotAct, SIGNAL(triggered()), this, SLOT(LoadFromSnapshotAct()));
 
+    m_EnableUserBackgroundColorAct = new QAction(tr("enabe user background color"), this);
+    m_EnableUserBackgroundColorAct->setCheckable(true);
+    connect(m_EnableUserBackgroundColorAct, SIGNAL(triggered()), this, SLOT(EnableUserBackgroundColor()));
+
+    m_UserBackgroundColorAct = new QAction(tr("background color"), this);
+    connect(m_UserBackgroundColorAct, SIGNAL(triggered()), this, SLOT(SetUserBackgroundColor()));
+
     readFromIni();
 
     m_tableViewVariables->verticalHeader()->resizeSections(QHeaderView::ResizeToContents);
@@ -175,17 +183,20 @@ bool TextWidget::writeToIni()
     ScQt_IniFileDataBaseWriteString(SectionPath, "Font", FontString, Fd);
 
     ScQt_IniFileDataBaseWriteInt(SectionPath, "icon", m_icon, Fd);
-    unsigned int BkColor = 0;
-    BkColor += m_BackgroundColor.red();
-    BkColor += m_BackgroundColor.green() << 8;
-    BkColor += m_BackgroundColor.blue() << 16;
-    QString ColorString = QString("0x%1").arg(BkColor, 0, 16);
-    ScQt_IniFileDataBaseWriteString(SectionPath, "BgColor", ColorString, Fd);
+    ScQt_IniFileDataBaseWriteYesNo(SectionPath, "EnableUserBgColor", m_EnableUserBackgroundColor, Fd);
+    if (m_EnableUserBackgroundColor) {
+        unsigned int BkColor = 0;
+        BkColor += m_UserBackgroundColor.red();
+        BkColor += m_UserBackgroundColor.green() << 8;
+        BkColor += m_UserBackgroundColor.blue() << 16;
+        QString ColorString = QString("0x%1").arg(BkColor, 0, 16);
+        ScQt_IniFileDataBaseWriteString(SectionPath, "BgColor", ColorString, Fd);
+    }
 
     QList<TextTableModel::Variable*> loc_variableList = m_dataModel->getList();
     int i;
     int loc_logicalIndex = 0;
-    // 0 -> dez, 1 -> hex,
+    // 0 -> dec, 1 -> hex,
     // 2 -> bin, 3 -> phys
     for(i = 0; i < loc_variableList.size(); i++) {
         loc_logicalIndex = m_tableViewVariables->verticalHeader()->logicalIndex(i);
@@ -230,19 +241,13 @@ bool TextWidget::readFromIni()
         }
     }
     m_icon = ScQt_IniFileDataBaseReadInt(SectionPath, "icon", 0, Fd);
-    BackgroundColor = ScQt_IniFileDataBaseReadInt(SectionPath, "BgColor", 0xFFFFFF, Fd);
-    if (s_main_ini_val.DarkMode) {
-        if (BackgroundColor == 0xFFFFFF) {
-            BackgroundColor = 0;
-        }
-    } else {
-        if (BackgroundColor == 0) {
-            BackgroundColor = 0xFFFFFF;
-        }
+    m_EnableUserBackgroundColor = ScQt_IniFileDataBaseReadYesNo(SectionPath, "EnableUserBgColor", 0, Fd);
+    if (m_EnableUserBackgroundColor) {
+        BackgroundColor = ScQt_IniFileDataBaseReadInt(SectionPath, "BgColor", 0xFFFFFF, Fd);
+        m_UserBackgroundColor = QColor(BackgroundColor&0x000000FF, (BackgroundColor&0x0000FF00)>>8, (BackgroundColor&0x00FF0000)>>16); // 0x00bbggrr
+        UserToCurrentColor();
+        m_dataModel->setBackgroundColor(m_CurrentBackgroundColor);
     }
-    m_BackgroundColor = QColor(BackgroundColor&0x000000FF, (BackgroundColor&0x0000FF00)>>8, (BackgroundColor&0x00FF0000)>>16); // 0x00bbggrr
-
-    m_dataModel->setBackgroundColor(m_BackgroundColor);
 
     for(int i = 0; ; i++) {
         QString Entry = QString("E%1").arg(i);
@@ -647,6 +652,26 @@ void TextWidget::LoadFromSnapshotAct()
     }
 }
 
+void TextWidget::EnableUserBackgroundColor()
+{
+    m_EnableUserBackgroundColor = m_EnableUserBackgroundColorAct->isChecked();
+    if (m_EnableUserBackgroundColor) {
+        m_UserBackgroundColor = QColor();
+        UserToCurrentColor();
+    }
+}
+
+void TextWidget::SetUserBackgroundColor()
+{
+    QColorDialog Dlg;
+    Dlg.setCurrentColor(m_UserBackgroundColor);
+    if (Dlg.exec() == QDialog::Accepted) {
+        m_UserBackgroundColor = Dlg.currentColor();
+        UserToCurrentColor();
+        m_dataModel->setBackgroundColor(m_CurrentBackgroundColor);
+    }
+}
+
 static QString ConvertAlignmentEnumToString(int par_Alignement)
 {
     if ((par_Alignement & Qt::AlignLeft) == Qt::AlignLeft) return QString("Left");
@@ -745,7 +770,11 @@ void TextWidget::customContextMenu(QPoint arg_point)
     if (!m_SnapshotBuffer.isEmpty()) {
         menu.addAction (m_LoadFromSnapshotAct);
     }
-
+    m_EnableUserBackgroundColorAct->setChecked(m_EnableUserBackgroundColor);
+    menu.addAction (m_EnableUserBackgroundColorAct);
+    if (m_EnableUserBackgroundColor) {
+        menu.addAction (m_UserBackgroundColorAct);
+    }
     menu.exec(mapToGlobal(arg_point));
     this->m_dataModel->setColumnAlignment(0, ConvertStringToAlignmentEnum(NameComboBox->currentText()));
     this->m_dataModel->setColumnAlignment(1, ConvertStringToAlignmentEnum(ValueComboBox->currentText()));
@@ -842,7 +871,7 @@ void TextWidget::blackboardVariableConfigChanged(int arg_vid, unsigned int arg_o
 void TextWidget::openDialog()
 {
     m_dataModel->makeBackup();
-    emit openStandardDialog(m_dataModel->getAllVariableNames(), true, true, m_BackgroundColor, m_tableViewVariables->font());
+    emit openStandardDialog(m_dataModel->getAllVariableNames(), true, true, QColor(), /*m_BackgroundColor,*/ m_tableViewVariables->font());
 }
 
 void TextWidget::ShowUnitColumn()
@@ -890,8 +919,8 @@ void TextWidget::changeFont(QFont arg_newFont)
 
 void TextWidget::changeColor(QColor arg_color)
 {
-    m_BackgroundColor = arg_color;
-    m_dataModel->setBackgroundColor(m_BackgroundColor);
+    Q_UNUSED(arg_color);
+    // this will not used
 }
 
 void TextWidget::changeWindowName(QString arg_name)
@@ -935,4 +964,18 @@ void TextWidget::resetDefaultVariables(QStringList arg_variables)
 {
     Q_UNUSED(arg_variables);
     m_dataModel->restoreBackup();
+}
+
+void TextWidget::UserToCurrentColor()
+{
+    m_CurrentBackgroundColor = m_UserBackgroundColor;
+    if (s_main_ini_val.DarkMode) {
+        if ( m_UserBackgroundColor.value() > 180) {
+            m_CurrentBackgroundColor.setHsv(m_UserBackgroundColor.hue(), m_UserBackgroundColor.saturation(), 180);
+        }
+    } else {
+        if (m_UserBackgroundColor.value() < 150) {
+            m_CurrentBackgroundColor.setHsv(m_UserBackgroundColor.hue(), m_UserBackgroundColor.saturation(), 150);
+        }
+    }
 }

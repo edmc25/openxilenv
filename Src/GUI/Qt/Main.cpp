@@ -42,19 +42,6 @@ extern "C" {
     extern void rm_Kill(void);
 }
 
-bool SystemDarkMode(QApplication *par_Application)
-{
-#if _WIN32
-    QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
-                       QSettings::NativeFormat);
-    if(settings.value("AppsUseLightTheme") == 0) {
-        SetDarkMode(par_Application, true);
-        return true;
-    }
-#endif
-    return false;
-}
-
 int main(int argc, char *argv[])
 {
 #ifndef _WIN32
@@ -64,11 +51,12 @@ int main(int argc, char *argv[])
 
     QApplication Application(argc, argv);
 
-    SystemDarkMode(&Application);
-
     // Use always "C" location to avoid use of ',' instead of '.'!
     QLocale::setDefault(QLocale::C);
     setlocale(LC_ALL, "C");
+
+    // this must be done before StartupInit()
+    s_main_ini_val.SystemDarkMode = IsDarkModeActive();
 
     Application.setStartDragDistance(20);
 
@@ -78,7 +66,11 @@ int main(int argc, char *argv[])
 
     StartBlackboardObserver();
 
-    SetDarkMode(&Application, s_main_ini_val.DarkMode);
+    if (!s_main_ini_val.DarkModeWasSetByUser) {  // Dark mode was not set before?
+        s_main_ini_val.DarkMode = s_main_ini_val.ShouldUseDarkModeIni | s_main_ini_val.SystemDarkMode;
+    }
+
+    SetDarkMode(s_main_ini_val.DarkMode);
 
     if (strlen(s_main_ini_val.SelectStartupAppStyle)) {  // if a style is defined inside INI file?
         if (!s_main_ini_val.DarkMode) {

@@ -16,8 +16,7 @@
 
 
 extern "C" {
-    int IniFileDosNotExistDialog(char *SelectedIniFile, char *ret_NewSelectedIniFile, int par_MaxChars,
-                                 void *par_Application)
+    int IniFileDosNotExistDialog(char *SelectedIniFile, char *ret_NewSelectedIniFile, int par_MaxChars)
     {
         // always rejected
         // without INI file XilEnv will be closed immediately

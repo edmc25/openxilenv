@@ -313,8 +313,7 @@ int ParseCommandLine (char *ret_IniFile, unsigned int par_MaxCharsIniFile,
                     // If -err2msg flag set no error message leave XilEnv immediately
                     if (GetError2MessageFlag()) return -1;
 
-                    if (IniFileDosNotExistDialog (szToken, NewSelectedIniFile, sizeof (NewSelectedIniFile),
-                                                  par_Application)) {
+                    if (IniFileDosNotExistDialog (szToken, NewSelectedIniFile, sizeof (NewSelectedIniFile))) {
                         return -1;
                     } else {
                         StringCopyMaxCharTruncate(ret_IniFile, NewSelectedIniFile, par_MaxCharsIniFile);
@@ -378,8 +377,7 @@ int ParseCommandLine (char *ret_IniFile, unsigned int par_MaxCharsIniFile,
     // Are there a INI file name transfered? otherwise ask for one
     if (ret_IniFile[0] == 0) {
         char NewSelectedIniFile[MAX_PATH];
-        switch (IniFileDosNotExistDialog (ret_IniFile, NewSelectedIniFile, sizeof (NewSelectedIniFile),
-                                          par_Application)) {
+        switch (IniFileDosNotExistDialog (ret_IniFile, NewSelectedIniFile, sizeof (NewSelectedIniFile))) {
         case -1:   // Exit
             if (lpCmdLine != NULL) {
                 my_free (lpCmdLine);

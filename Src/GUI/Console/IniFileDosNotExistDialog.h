@@ -17,6 +17,5 @@
 
 #pragma once
 
-int IniFileDosNotExistDialog (char *SelectedIniFile, char *ret_NewSelectedIniFile, int par_MaxChars,
-                             void *par_Application);
+int IniFileDosNotExistDialog (char *SelectedIniFile, char *ret_NewSelectedIniFile, int par_MaxChars);
 

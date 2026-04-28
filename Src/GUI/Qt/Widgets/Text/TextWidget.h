@@ -73,6 +73,8 @@ private slots:
     void SaveAllToSnapshotAct();
     void LoadFromEquAct();
     void LoadFromSnapshotAct();
+    void EnableUserBackgroundColor();
+    void SetUserBackgroundColor();
     void customContextMenu(QPoint arg_point);
     void changeFont(QFont arg_newFont) Q_DECL_OVERRIDE;
     void changeColor(QColor arg_color) Q_DECL_OVERRIDE;
@@ -82,12 +84,15 @@ private slots:
     void resetDefaultVariables(QStringList arg_variables) Q_DECL_OVERRIDE;
 
 private:
+    void UserToCurrentColor();
     int m_icon;
     TextTableView *m_tableViewVariables;
     TextTableModel *m_dataModel;
     QPoint m_startDragPosition;
     BlackboardObserverConnection m_ObserverConnection;
-    QColor m_BackgroundColor;
+    bool m_EnableUserBackgroundColor;
+    QColor m_UserBackgroundColor;
+    QColor m_CurrentBackgroundColor;
 
     QAction *m_ConfigAct;
     QAction *m_ShowUnitColumnAct;
@@ -105,6 +110,8 @@ private:
     QAction *m_SaveAllToSnapshotAct;
     QAction *m_LoadFromEquAct;
     QAction *m_LoadFromSnapshotAct;
+    QAction *m_EnableUserBackgroundColorAct;
+    QAction *m_UserBackgroundColorAct;
 
     bool m_ShowUnitColumn;
     bool m_ShowDisplayTypeColumn;

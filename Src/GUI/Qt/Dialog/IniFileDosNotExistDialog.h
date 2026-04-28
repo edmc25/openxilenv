@@ -32,7 +32,7 @@ class IniFileDosNotExist : public QDialog
     Q_OBJECT
 
 public:
-    explicit IniFileDosNotExist (char *par_SelectedIniFile, void *par_Application, QWidget *parent = nullptr);
+    explicit IniFileDosNotExist (char *par_SelectedIniFile, QWidget *parent = nullptr);
     ~IniFileDosNotExist();
     int GetNewSelectedIni (char *ret_NewSelectedIniFile, int par_MaxChars);
     bool GetDarkMode();
@@ -71,8 +71,7 @@ private:
 
 extern "C" {
 #endif
-    int IniFileDosNotExistDialog (char *SelectedIniFile, char *ret_NewSelectedIniFile, int par_MaxChars,
-                                  void *par_Application);
+int IniFileDosNotExistDialog (char *SelectedIniFile, char *ret_NewSelectedIniFile, int par_MaxChars);
 #ifdef __cplusplus
 }
 #endif

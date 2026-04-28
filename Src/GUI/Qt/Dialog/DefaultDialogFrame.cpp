@@ -140,10 +140,15 @@ void DefaultDialogFrame::setCurrentColor(QColor arg_color)
 {
     m_defaultColor = arg_color;
     m_currentColor = arg_color;
-    QPixmap loc_pixmap = ui->colorPushButton->icon().pixmap(ui->colorPushButton->iconSize());
-    loc_pixmap.fill(arg_color);
-    QIcon loc_icon(loc_pixmap);
-    ui->colorPushButton->setIcon(loc_icon);
+    if (arg_color.isValid()) {
+        QPixmap loc_pixmap = ui->colorPushButton->icon().pixmap(ui->colorPushButton->iconSize());
+        loc_pixmap.fill(arg_color);
+        QIcon loc_icon(loc_pixmap);
+        ui->colorPushButton->setIcon(loc_icon);
+    } else {
+        // color button should not be available
+        ui->colorPushButton->setVisible(false);
+    }
 }
 
 void DefaultDialogFrame::setCurrentFont(QFont arg_font)
