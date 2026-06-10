@@ -130,7 +130,7 @@ TextWidget::TextWidget(QString par_WindowTitle, MdiSubWindow *par_SubWindow, Mdi
     m_LoadFromSnapshotAct = new QAction(tr("load from snapshot"), this);
     connect(m_LoadFromSnapshotAct, SIGNAL(triggered()), this, SLOT(LoadFromSnapshotAct()));
 
-    m_EnableUserBackgroundColorAct = new QAction(tr("enabe user background color"), this);
+    m_EnableUserBackgroundColorAct = new QAction(tr("enable user background color"), this);
     m_EnableUserBackgroundColorAct->setCheckable(true);
     connect(m_EnableUserBackgroundColorAct, SIGNAL(triggered()), this, SLOT(EnableUserBackgroundColor()));
 
