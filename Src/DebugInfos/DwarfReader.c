@@ -184,6 +184,13 @@ int32_t get_basetype(int32_t byteSize, uint32_t typeEncoding)
         }
     case 0x7:
     case 0x8:
+    case 0x10:  // UTF
+    case 0x11:  // UCS
+    case 0x12:  // ASCII
+    case 0xF:   // IEEE 754R decimal floating-point number: we will display this as unsigend integer
+    case 0xa:   // Packed decimal: we will display this as unsigend integer
+    case 0xb:   // Numeric string ?
+    case 0xc:   // Edit string ?
         switch (byteSize) {
         case 1:
             return 2;   // BB_UBYTE
