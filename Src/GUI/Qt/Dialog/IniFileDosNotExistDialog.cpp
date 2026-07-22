@@ -109,6 +109,9 @@ IniFileDosNotExist::IniFileDosNotExist(char *par_SelectedIniFile, QWidget *paren
     ui->DefaultModeRadioButton->setVisible(false);
     ui->NormalModeRadioButton->setVisible(false);
     ui->DarkModeRadioButton->setVisible(false);
+    ui->DarkModeLabel->setVisible(false);
+    ui->NormalModeLabel->setVisible(false);
+    ui->DefaultModeLabel->setVisible(false);
 #endif
 
     m_DarkModeHasChanged = false;

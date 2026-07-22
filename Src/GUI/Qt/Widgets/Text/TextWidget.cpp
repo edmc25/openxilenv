@@ -655,9 +655,17 @@ void TextWidget::LoadFromSnapshotAct()
 void TextWidget::EnableUserBackgroundColor()
 {
     m_EnableUserBackgroundColor = m_EnableUserBackgroundColorAct->isChecked();
+
     if (m_EnableUserBackgroundColor) {
-        m_UserBackgroundColor = QColor();
+        // Keep existing user color if already set; otherwise initialize to a sensible default.
+        if (!m_UserBackgroundColor.isValid()) {
+            m_UserBackgroundColor = s_main_ini_val.DarkMode ? QColor(Qt::black) : QColor(Qt::white);
+        }
         UserToCurrentColor();
+        m_dataModel->setBackgroundColor(m_CurrentBackgroundColor);
+    } else {
+        QColor defaultBg = s_main_ini_val.DarkMode ? QColor(Qt::black) : QColor(Qt::white);
+        m_dataModel->setBackgroundColor(defaultBg);
     }
 }
 
@@ -871,7 +879,7 @@ void TextWidget::blackboardVariableConfigChanged(int arg_vid, unsigned int arg_o
 void TextWidget::openDialog()
 {
     m_dataModel->makeBackup();
-    emit openStandardDialog(m_dataModel->getAllVariableNames(), true, true, QColor(), /*m_BackgroundColor,*/ m_tableViewVariables->font());
+    emit openStandardDialog(m_dataModel->getAllVariableNames(), true, true, QColor(), m_tableViewVariables->font());
 }
 
 void TextWidget::ShowUnitColumn()
@@ -919,8 +927,7 @@ void TextWidget::changeFont(QFont arg_newFont)
 
 void TextWidget::changeColor(QColor arg_color)
 {
-    Q_UNUSED(arg_color);
-    // this will not used
+    Q_UNUSED(arg_color); // this is not used
 }
 
 void TextWidget::changeWindowName(QString arg_name)
@@ -968,9 +975,14 @@ void TextWidget::resetDefaultVariables(QStringList arg_variables)
 
 void TextWidget::UserToCurrentColor()
 {
+    if (!m_UserBackgroundColor.isValid()) {
+        m_CurrentBackgroundColor = s_main_ini_val.DarkMode ? QColor(Qt::black) : QColor(Qt::white);
+        return;
+    }
+
     m_CurrentBackgroundColor = m_UserBackgroundColor;
     if (s_main_ini_val.DarkMode) {
-        if ( m_UserBackgroundColor.value() > 180) {
+        if (m_UserBackgroundColor.value() > 180) {
             m_CurrentBackgroundColor.setHsv(m_UserBackgroundColor.hue(), m_UserBackgroundColor.saturation(), 180);
         }
     } else {
