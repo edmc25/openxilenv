@@ -418,9 +418,7 @@ int ReadBasicConfigurationFromIni(MAIN_INI_VAL *sp_main_ini)
     s_main_ini_val.WriteMemoryLeakFile = IniFileDataBaseReadYesNo(OPT_SECTION, "WriteMemoryLeakFile", 0, Fd);
 
     s_main_ini_val.ShouldUseDarkModeIni = IniFileDataBaseReadYesNo(OPT_SECTION, "DarkMode", 0, Fd);
-    if (!s_main_ini_val.DarkModeWasSetByUser) {  // Dark mode was not set before?
-        s_main_ini_val.DarkMode = s_main_ini_val.ShouldUseDarkModeIni;
-    }
+
     if (s_main_ini_val.RenameExecutableActive) {
         ReadOneConfigurablePrefix(CONFIGURABLE_PREFIX_TYPE_PROGRAM_NAME, "PrefixTypeProgramName", DEFAULT_PREFIX_TYPE_PROGRAM_NAME);
 

@@ -165,6 +165,7 @@ typedef struct
 
   int             WriteMemoryLeakFile;
 
+  int             SystemDarkMode;
   int             ShouldUseDarkModeIni;
   int             DarkModeWasSetByUser;
   int             DarkMode;

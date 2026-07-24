@@ -1,8 +1,8 @@
 #ifndef DARKMODE_H
 #define DARKMODE_H
 
-#include <QApplication>
+bool IsDarkModeActive();
 
-void SetDarkMode(QApplication *par_Application, bool par_DarkMode);
+void SetDarkMode(bool par_DarkMode);
 
 #endif // DARKMODE_H

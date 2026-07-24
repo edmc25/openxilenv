@@ -95,20 +95,27 @@ int IniFileDosNotExist::BuidANewIniFile()
 
 void IniFileDosNotExist::ChangeDarkMode(bool par_DarkMode)
 {
-    SetDarkMode(m_Application, par_DarkMode);
+    SetDarkMode(par_DarkMode);
 }
 
 
-IniFileDosNotExist::IniFileDosNotExist(char *par_SelectedIniFile, void *par_Application, QWidget *parent) :
+IniFileDosNotExist::IniFileDosNotExist(char *par_SelectedIniFile, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::IniFileDosNotExist)
 {
     ui->setupUi(this);
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 8, 0)
+    ui->DefaultModeRadioButton->setVisible(false);
+    ui->NormalModeRadioButton->setVisible(false);
+    ui->DarkModeRadioButton->setVisible(false);
+    ui->DarkModeLabel->setVisible(false);
+    ui->NormalModeLabel->setVisible(false);
+    ui->DefaultModeLabel->setVisible(false);
+#endif
+
     m_DarkModeHasChanged = false;
     m_DarkMode = DEFAULT_MODE;
-
-    m_Application = (QApplication*)par_Application;
 
     ui->label->setText(QString ("INI file \"%1\" doesn't exist").arg (QString(par_SelectedIniFile)));
     TimerUpdateSoftIceIcon();
@@ -166,7 +173,7 @@ IniFileDosNotExist::IniFileDosNotExist(char *par_SelectedIniFile, void *par_Appl
             if (m_DarkMode == DARK_MODE) {
                 // preselect dark mode
                 ui->DarkModeRadioButton->setChecked(true);
-                SetDarkMode(m_Application, true);
+                SetDarkMode(true);
                 SetDarkModeIntoMainSettings(1);
             } else if (m_DarkMode == NORMAL_MODE) {
                 ui->NormalModeRadioButton->setChecked(true);
@@ -292,7 +299,7 @@ void IniFileDosNotExist::on_NormalModeRadioButton_clicked()
 {
     m_DarkModeHasChanged = true;
     m_DarkMode = NORMAL_MODE;
-    SetDarkMode(m_Application, 0);
+    SetDarkMode(0);
     SetDarkModeIntoMainSettings(0);
 }
 
@@ -300,7 +307,7 @@ void IniFileDosNotExist::on_DarkModeRadioButton_clicked()
 {
     m_DarkModeHasChanged = true;
     m_DarkMode = DARK_MODE;
-    SetDarkMode(m_Application, 1);
+    SetDarkMode(1);
     SetDarkModeIntoMainSettings(1);
 }
 
@@ -321,12 +328,11 @@ bool IniFileDosNotExist::GetDarkMode()
 }
 
 extern "C" {
-int IniFileDosNotExistDialog (char *SelectedIniFile, char *ret_NewSelectedIniFile, int par_MaxChars,
-                              void *par_Application)
+int IniFileDosNotExistDialog (char *SelectedIniFile, char *ret_NewSelectedIniFile, int par_MaxChars)
 {
     int Ret = -1;
     IniFileDosNotExist *Dlg;
-    Dlg = new IniFileDosNotExist (SelectedIniFile, par_Application);
+    Dlg = new IniFileDosNotExist (SelectedIniFile);
     if (Dlg->exec() == QDialog::Accepted) {
         Ret = Dlg->GetNewSelectedIni(ret_NewSelectedIniFile, par_MaxChars);
     }
